@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/widgets/nl.fokkezb.form/controllers/widget.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/widgets/nl.fokkezb.form/controllers/widget.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">66.30</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">378</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">41.45</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.61</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * Main controller of the widget.
+ *
+ * See the [Getting Started](#!/guide/getting_started) guide.
+ *
+ * @class Widgets.nlFokkezbForm.controllers.widget
+ * @requires Widgets.nlFokkezbForm.lib.validator
+ */
+
+var deepExtend = require(WPATH(&#039;deepExtend&#039;));
+
+/**
+ * @event change
+ * Fired when the value of the field changes.
+ *
+ * @param {Object} e Event
+ * @param {String} e.field The name of the field that has changed.
+ * @param {Mixed} e.value The new value.
+ * @param {Object} e.form The form controller.
+ */
+
+/**
+ * @type {Object} Exposes {@link Widgets.nlFokkezbForm.lib.validator}
+ */
+$.validator = require(WPATH(&#039;validator&#039;));
+
+$.init = init;
+$.getValues = getValues;
+$.setValues = setValues;
+$.isValid = isValid;
+$.getField = getField;
+
+/*
+ * @type {Object} The args the widget was constructed with if auto-initialize couldn&#039;t be run.
+ * @private
+ */
+var defaults;
+
+/*
+ * @type {Object} References to all field controllers by name.
+ * @private
+ */
+var fieldCtrls = {};
+
+/*
+ * @type {Function} Form-wide listener added via #init.
+ */
+var listener;
+
+/*
+ * @type {Function} Filters values before returning them.
+ */
+var filter;
+
+/*
+ * @type {Object} Values set the form (only updated when calling getValues!)
+ */
+var values = {};
+
+/**
+ * Constructor for the form.
+ *
+ * Automatically calls #init if it has `args.fieldsets`, `args.fields` or `args.config`.
+ *
+ * @method Controller
+ * @param args Arguments passed to the controller.
+ 
+ */
+(function constructor(args) {
+
+  // we don&#039;t want these
+  delete args.id;
+  delete args.classes;
+  delete args.__parentSymbol;
+  delete args[&#039;$model&#039;];
+  delete args.__itemTemplate;
+
+  // if we have one of these we can auto-initialize
+  if (args.config || args.fieldsets || args.fields) {
+    init(args);
+  }
+
+  // else we save them as defaults for init()
+  else {
+    defaults = args;
+  }
+
+})(arguments[0] || {});
+
+/**
+ * Initialize the form.
+ *
+ * Called automatically by #Controller if it has `args.fieldsets` or `args.fields`.
+ *
+ * @param {Object} opts                Options. Either `opts.fieldsets` or `opts.fields` is required.
+ * @param {String} [opts.config]       Path of a CommonJS or JSON file to extend `args` with.
+ * @param {Object[]} [opts.table]      Optional properties to apply to the `Ti.UI.TableView`.
+ * @param {Object[]} [opts.fieldsets]  Array of fieldsets.
+ * @param {Object[]} [opts.fields]     Array of fields.
+ * @param {Object} [opts.values]       Values as object with field names as keys.
+ * @param {Function} [opts.listener]   Listener for the form&#039;s #change event.
+ * @param {Function} [opts.filter]     Function to filter values before returning them.
+ *
+ * @throws {Error} If the required options are missing.
+ */
+function init(opts) {
+
+  // opts can be a string we handle like opts.config
+  if (typeof opts === &#039;string&#039;) {
+    opts = {
+      config: opts
+    };
+  }
+
+  // clone input opts and apply defaults set in constructor
+  opts = deepExtend({}, defaults || {}, opts);
+
+  // we have a config file to load
+  if (opts.config) {
+
+    // JSON
+    if (opts.config.indexOf(&#039;.json&#039;) !== -1) {
+      opts = deepExtend(opts, JSON.parse(Ti.Filesystem.getFile(opts.config).read().text));
+    }
+
+    // CommonJS
+    else {
+      var cjs = require(opts.config);
+      var config;
+
+      // Function
+      if (_.isFunction(cjs)) {
+
+        // can be either sync or async
+        config = cjs($, opts, function(config) {
+          opts = deepExtend(opts, config);
+
+          render(opts);
+        });
+
+        // Async
+        if (!config) {
+          return;
+        }
+      }
+
+      // Object
+      else {
+        config = cjs;
+      }
+
+      opts = deepExtend(opts, config);
+    }
+  }
+
+  render(opts);
+}
+
+/*
+ * Continue init after config has been loaded
+ *
+ * @private
+ * @param {Object} Options from constructor, init and config files merged.
+ */
+function render(opts) {
+
+  if (!opts.fieldsets &amp;&amp; !opts.fields) {
+    throw &#039;Either `opts.fieldsets` or `opts.fields` is required.&#039;;
+  }
+
+  // user can either pass an array or fieldsets or just fields we&#039;ll wrap it in one
+  if (!opts.fieldsets &amp;&amp; opts.fields) {
+    opts.fieldsets = [{
+      fields: opts.fields,
+      section: opts.section,
+      legend: opts.legend,
+      legendid: opts.legendid
+    }];
+    delete opts.fields;
+  }
+
+  // values for the fields
+  values = opts.values || {};
+
+  // clean-up listeners
+  _.each(fieldCtrls, function(fieldCtrl, name) {
+    fieldCtrl.off();
+  });
+
+  // user can pass custom table properties
+  var tableProp = opts.table || {};
+
+  // create array for sections unless user gave some
+  tableProp.sections = tableProp.sections || [];
+
+  // for each fieldset
+  _.each(opts.fieldsets, function(fieldset) {
+    var section;
+
+    // user can pass section properties
+    var sectionProp = fieldset.section || {};
+
+    // user can pass Ti.UI.TableViewSection
+    if (sectionProp.apiName === &#039;Ti.UI.TableViewSection&#039;) {
+      section = sectionProp;
+
+    } else {
+
+      // user or default classesƒ
+      sectionProp.classes = sectionProp.classes || [&#039;section&#039;];
+
+      // create the section, extending TSS style by args
+      section = $.UI.create(&#039;TableViewSection&#039;, sectionProp);
+    }
+
+    // user can pass legend or legendid we&#039;ll use as headerTitle
+    if (fieldset.legend) {
+      section.headerTitle = fieldset.legend;
+
+    } else if (fieldset.legendid) {
+      section.headerTitle = L(fieldset.legendid);
+    }
+
+    // cascade form-wide row properties
+    if (opts.row) {
+      fieldset.row = _.defaults(fieldset.row || {}, opts.row);
+    }
+
+    // for each field
+    _.each(fieldset.fields, function(field) {
+
+      // allow for `null` or `undefined` values
+      if (!field) {
+        return;
+      }
+
+      // field can be a Ti.UI.TableViewRow
+      // FIXME: apiName is Ti.View (https://jira.appcelerator.org/browse/TC-4278)
+      if (field.apiName) {
+        section.add(field);
+
+      } else {
+
+        // user can either pass value in field or in separate &#039;values&#039; arg
+        // set both to use the field&#039;s value as default
+        if (values[field.name]) {
+          field.value = values[field.name];
+        }
+
+        // cascade fieldset-wide row properties
+        if (fieldset.row) {
+          field.row = _.defaults(field.row || {}, fieldset.row);
+        }
+
+        field.form = $;
+
+        var fieldCtrl;
+
+        // user can specify a controller to deliver the row
+        if (field.controller) {
+          fieldCtrl = Alloy.createController(field.controller, field);
+
+        } else {
+
+          // user can specify a widget and or widget view (type) to deliver the row
+          fieldCtrl = Alloy.createWidget(field.widget || &#039;nl.fokkezb.form&#039;, field.type || &#039;text&#039;, field);
+        }
+
+        // pass field events on to the form listeners
+        fieldCtrl.on(&#039;change&#039;, function(e) {
+          $.trigger(&#039;change change:&#039; + e.field, e);
+
+          // form-wide listener set via init
+          if (listener) {
+            listener(e);
+          }
+
+        });
+
+        // keep a reference to the widget
+        fieldCtrls[field.name] = fieldCtrl;
+
+        var row = fieldCtrl.getViewEx({
+
+          // makes sure we get an actual view and not the row controller
+          recurse: true
+        });
+
+        // push the views of the controller as row
+        section.add(row);
+      }
+
+    });
+
+    // push the section
+    tableProp.sections.push(section);
+
+  });
+
+  // set the table
+  $.table.applyProperties(tableProp);
+
+  // add listener
+  if (opts.listener) {
+    listener = opts.listener;
+  }
+
+  // add filter
+  if (opts.filter) {
+    filter = opts.filter;
+  }
+}
+
+/**
+ * Get all field values.
+ *
+ * @return {Object} Values as object with field names as keys.
+ */
+function getValues() {
+
+  _.each(fieldCtrls, function(fieldCtrl, name) {
+    values[name] = fieldCtrl.getValue();
+  });
+
+  if (filter) {
+    values = filter(values);
+  }
+
+  return values;
+}
+
+/**
+ * Set field values.
+ *
+ * @param {Object} Values as object with field names as keys.
+ */
+function setValues(values) {
+
+  _.each(values, function(value, name) {
+
+    // values could contain properties for which we don&#039;t have a field
+    if (fieldCtrls[name]) {
+      fieldCtrls[name].setValue(value);
+    }
+  });
+}
+
+/**
+ * Get the controller of a field, e.g. to call its value, validation or focus methods.
+ *
+ * @param  {String} name        Name of the field to get.
+ * @return {Object|undefined}   Controller of the field or `undefined` if not found.
+ */
+function getField(name) {
+  return fieldCtrls[name];
+}
+
+/**
+ * Validate all fields.
+ *
+ * @return {Boolean} Returns `true` if all fields are valid.
+ */
+function isValid() {
+  var valid = true;
+
+  _.each(fieldCtrls, function(fieldCtrl, name) {
+    valid = valid &amp;&amp; fieldCtrl.isValid();
+  });
+
+  return valid;
+}
+
+/*
+ * Handles the table&#039;s `singletap` event.
+ *
+ * @private
+ * @param  {Object} e Event dictionary.
+ */
+function onTableSingletap(e) {
+
+  // click on a TableView headerView or custom row
+  if (!e.row || !e.row._name) {
+    return;
+  }
+
+  fieldCtrls[e.row._name].focus(e);
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

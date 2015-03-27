@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/lib/mapUtils.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/lib/mapUtils.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">76.87</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">183</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">15.40</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.52</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * @class Util.map
+ *
+ * @author Steven House
+ * @email steven.m.house@gmail.com
+ *
+ * Map utility functions
+ */
+
+// Include logging utility
+var log = Alloy.Globals.log;
+log.warn(&#039;[mapUtils] : Opened Library&#039;);
+
+var xhr = require(&#039;network/httpClient&#039;);
+var key = &quot;AIzaSyCgBVzz7tXycmVYq4d-X0vax3MkkOSi5cs&quot;;
+/**
+ * Description
+ * @method getLocalMechanics
+ * @param {} args
+ * @return
+ */
+exports.getLocalMechanics = function(args) {
+    var lat = args.lat;
+    var lng = args.lng;
+    var success = args.success || function(resp) {};
+    var error = args.error || function(resp) {};
+
+    var xhrSetup = {};
+    xhrSetup.requestType = &quot;GET&quot;;
+    xhrSetup.parseJSON = true;
+    xhrSetup.url =
+        &quot;https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=&quot; +
+        lat + &quot;,&quot; + lng +
+        &quot;&amp;radius=2500&amp;types=car_repair&amp;sensor=false&amp;key=&quot; + key;
+
+    xhrSetup.success = success;
+
+    /**
+     * Description
+     * @method error
+     * @param {} err
+     * @param {} context
+     * @return
+     */
+    xhrSetup.error = function(err, context) {
+        error(err, context);
+    };
+
+    xhr.request(xhrSetup);
+};
+
+/**
+ * @method getGMapsPlace
+ * @param args
+ */
+exports.getGMapsPlace = function(args) {
+    //https://maps.googleapis.com/maps/api/place/details/json?placeid=ChIJMUTban-AhYARVhdUFD811Vo&amp;key=AIzaSyCgBVzz7tXycmVYq4d-X0vax3MkkOSi5cs
+    var placeId = args.placeId || &quot;ChIJMUTban-AhYARVhdUFD811Vo&quot;;
+    var success = args.success || function(resp) {};
+    var error = args.error || function(resp) {};
+
+    var xhrSetup = {};
+    xhrSetup.requestType = &quot;GET&quot;;
+    xhrSetup.parseJSON = true;
+    xhrSetup.url =
+        &quot;https://maps.googleapis.com/maps/api/place/details/json?placeid=&quot; + placeId +
+        &quot;&amp;key=&quot; + key;
+
+    xhrSetup.success = success;
+
+    /**
+     * Description
+     * @method error
+     * @param {} err
+     * @param {} context
+     * @return
+     */
+    xhrSetup.error = function(err, context) {
+        error(err, context);
+    };
+
+    xhr.request(xhrSetup);
+}
+
+
+/**
+ * @method getGMapsPhoto
+ * @param {String} photoReference
+ */
+exports.getGMapsPhoto = function(args) {
+    //https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&amp;photoreference;=CnRtAAAATLZNl354RwP_9UKbQ_5Psy40texXePv4oAlgP4qNEkdIrkyse7rPXYGd9D_Uj1rVsQdWT4oRz4QrYAJNpFX7rzqqMlZw2h2E2y5IKMUZ7ouD_SlcHxYq1yL4KbKUv3qtWgTK0A6QbGh87GB3sscrHRIQiG2RrmU_jF4tENr9wGS_YxoUSSDrYjWmrNfeEHSGSc3FyhNLlBU&amp;key;=AddYourOwnKeyHere
+    var photoReference = args.photoReference || false;
+    var success = args.success || function(resp) {};
+    var error = args.error || function(resp) {};
+
+    var xhrSetup = {};
+    xhrSetup.requestType = &quot;GET&quot;;
+    xhrSetup.parseJSON = false;
+    xhrSetup.url = &quot;https://maps.googleapis.com/maps/api/place/photo?photoreference=&quot; + photoReference + &quot;&amp;key=&quot; + key;
+    xhrSetup.success = success;
+
+    /**
+     * Description
+     * @method error
+     * @param {} err
+     * @param {} context
+     * @return
+     */
+    xhrSetup.error = function(err, context) {
+        error(err, context);
+    };
+
+    xhr.request(xhrSetup);
+}
+
+/*
+{
+   &quot;html_attributions&quot; : [],
+   &quot;results&quot; : [
+      {
+         &quot;geometry&quot; : {
+            &quot;location&quot; : {
+               &quot;lat&quot; : -33.870199,
+               &quot;lng&quot; : 151.192077
+            }
+         },
+         &quot;icon&quot; : &quot;http://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png&quot;,
+         &quot;id&quot; : &quot;1480c14750e7281fa1f3f97a6c0f620d9ef4cc84&quot;,
+         &quot;name&quot; : &quot;Automotive Vehicle Inspections Pty Ltd&quot;,
+         &quot;reference&quot; : &quot;CpQBiAAAALLkdW2xbnol1IRj9gMrGd9LV_h5r_cQLERT8Ue3p7DJyioUp1AEAnwOK5Wuqqr4h-DWBYDRMoUDVtS8IHwF8ITRCB_gJ8dBAMYJ8BeTYncgubby3sKOFZauts8evQje2CTj1vpeFJqBOQBr0azhD1Ijh8Pt4Je20Tnom3fZwbXUll2Yc0be6eYRGMxbxeGlxRIQTbOkheD5AAXI8t5SZh8doRoUCL4HrI4jrTIAu1nh2DCgPVOCJko&quot;,
+         &quot;types&quot; : [ &quot;car_repair&quot;, &quot;establishment&quot; ],
+         &quot;vicinity&quot; : &quot;214/102 Miller Street, Pyrmont&quot;
+      },
+      {
+         &quot;geometry&quot; : {
+            &quot;location&quot; : {
+               &quot;lat&quot; : -33.868789,
+               &quot;lng&quot; : 151.194217
+            }
+         },
+         &quot;icon&quot; : &quot;http://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png&quot;,
+         &quot;id&quot; : &quot;95089fec229ebe8eed7f1aa8845a97379bd0dcee&quot;,
+         &quot;name&quot; : &quot;Tyres Central&quot;,
+         &quot;opening_hours&quot; : {
+            &quot;open_now&quot; : true
+         },
+         &quot;photos&quot; : [
+            {
+               &quot;height&quot; : 151,
+               &quot;html_attributions&quot; : [],
+               &quot;photo_reference&quot; : &quot;CnRnAAAA_lbpdhLhoybL4txlEnw-q3KgyNH-nRMbfp9mgSajfvAL02ZkqNObN8xrNdzARhz7KwYhesAeVigDwMIBZoMbKkDt_0RF9xXjJhaGqc4ZxGFwnqyY8pfPzJMTLtiDpoFIpNou6ImlEPmCapSp8BXI5BIQ-qXQVpF1uuGF6piBptyuDRoUpjUsVrf7hEjMawZg-ZFqNbVMHOc&quot;,
+               &quot;width&quot; : 269
+            }
+         ],
+         &quot;reference&quot; : &quot;CnRvAAAAC6oaIu8sJS5BN4bry_7n_c9scDmpuROoQe9wJFfy1TjLFTEb4ol9DmxqaHFFgxSVjClCRGarEqQUeJdQanHVPReaiJFfh5CvcKOIUDNC8KZeLSPduUTsHPMN18Cs8zFMU9PviomUlfMzzN8dNdnj0hIQrk_KE5578UaN7sehh1Nk9RoUhdo52FMCb9p_7lTtCCnRBQB7itY&quot;,
+         &quot;types&quot; : [ &quot;store&quot;, &quot;car_repair&quot;, &quot;establishment&quot; ],
+         &quot;vicinity&quot; : &quot;Pyrmont&quot;
+      },
+      {
+         &quot;geometry&quot; : {
+            &quot;location&quot; : {
+               &quot;lat&quot; : -33.870545,
+               &quot;lng&quot; : 151.194722
+            }
+         },
+         &quot;icon&quot; : &quot;http://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png&quot;,
+         &quot;id&quot; : &quot;2f50bbfae132abbb07fa184cb826e1d29555cb53&quot;,
+         &quot;name&quot; : &quot;Moses &amp; Sons Smash Repairs&quot;,
+         &quot;reference&quot; : &quot;CoQBfAAAAAQwiJgMtoLGKX-CGZzF0_Be-OJADVyH8LyC07C8auDpAPDVxZYYH0Cqx70cruFU-cTWI9JlFPRYt2ydsmtEDzaUtNeKnHg_3HLrP9doHP2mCvTWYUGRWFFsHS6Osv_i7rXQX_Iqng0YqWpLD6d4ltTChJMZNoNWrIk8cDzlwrVIEhBxzWeiw5Hl_N2RtMCclqUPGhS01VaK5zAT3VUcsCPH6iIAtnfl8Q&quot;,
+         &quot;types&quot; : [ &quot;car_repair&quot;, &quot;establishment&quot; ],
+         &quot;vicinity&quot; : &quot;192 Harris St, Pyrmont&quot;
+      },
+      {
+         &quot;geometry&quot; : {
+            &quot;location&quot; : {
+               &quot;lat&quot; : -33.87059,
+               &quot;lng&quot; : 151.192477
+            }
+         },
+         &quot;icon&quot; : &quot;http://maps.gstatic.com/mapfiles/place_api/icons/generic_business-71.png&quot;,
+         &quot;id&quot; : &quot;c23fc6981ac31013d93377a994eec048f6765717&quot;,
+         &quot;name&quot; : &quot;Auto Inspect&quot;,
+         &quot;opening_hours&quot; : {
+            &quot;open_now&quot; : false
+         },
+         &quot;reference&quot; : &quot;CnRuAAAAgoMrldqrw66hHDUGZld4nBW5cCbiy3l_9GUq7-xv01BkIIlZJokXMf15ghj1FkA_iXg8khxVXXbQJn_3704d9GS59gF195eMsv23oKzCrTmLBXibHUIaqjbVWliAHhwuibCrSB6b3z9Z6dQoH-eophIQwD3XlE8BPMaJ6yvogqwPZRoUGd-4S3IygVNdgFMC-T9sGWZ0ybs&quot;,
+         &quot;types&quot; : [ &quot;car_repair&quot;, &quot;establishment&quot; ],
+         &quot;vicinity&quot; : &quot;5.01/55 Miller Ln, Pyrmont&quot;
+      }
+   ],
+   &quot;status&quot; : &quot;OK&quot;
+}
+*/</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/widgets/com.prodz.tidynamicgrid/controllers/widget.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/widgets/com.prodz.tidynamicgrid/controllers/widget.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">63.73</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">150</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">30.86</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.98</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">var params,columns,space,data,screenWidth,newWidth,columnWidth,frameBGcolor,colViews,itemsOptions,onItemClick,currentCol,delayTime;
+
+var init = function(opts){
+	params = opts || {};
+	columns = params.columns || 3;
+	space = params.space || 3;
+	data = params.data || {};
+	
+	currentCol=0;
+	
+	//FIX FOR GETTING RIGHT DIMENSIONS DEPENDING OS
+	delayTime = params.delayTime || null;
+	if(delayTime == null){
+		delayTime = (OS_ANDROID) ? 1000:500;
+	}
+	
+	screenWidth = params.width || Ti.Platform.displayCaps.getPlatformWidth();
+    if (OS_ANDROID) {
+        screenWidth /= Ti.Platform.displayCaps.logicalDensityFactor;
+    }
+	newWidth = screenWidth - space;
+	columnWidth = (newWidth / columns) - space;
+	
+	//ADJUST THE SCROLLVIEW
+	$.tdgScrollView.left = space+&quot;dp&quot;;
+	$.tdgScrollView.top = space+&quot;dp&quot;;
+	$.tdgScrollView.right = -1;
+	
+	//MAIN BG COLOR
+	frameBGcolor = params.gridBackgroundColor || &#039;#fff&#039;;
+	$.tdgMain.backgroundColor = frameBGcolor;
+	
+	//ITEMS OPTIONS
+	itemsOptions = {
+		backgroundColor: params.itemBackgroundColor || &#039;transparent&#039;,
+		borderWidth: params.itemBorderWidth || 0,
+		borderColor: params.itemBorderColor || &#039;transparent&#039;,
+		borderRadius: params.itemBorderRadius || 0
+	};
+	
+	//ITEM CLICK FUNCTION
+	onItemClick = params.onItemClick || function(){Ti.API.info(&#039;TiDynamicGrid -&gt; onItemClick is not defined.&#039;);};
+	
+	colViews = [];
+	
+	for(var x=0;x&lt;columns;x++){
+		colViews[x] = Ti.UI.createView({
+			width:columnWidth+&quot;dp&quot;,
+			height:Ti.UI.SIZE,
+			backgroundColor:&#039;transparent&#039;,
+			top:0,
+			left:0,
+			right:space+&quot;dp&quot;,
+			bottom:space+&quot;dp&quot;,
+			layout:&#039;vertical&#039;
+		});
+		$.tdgScrollView.add(colViews[x]);
+	}
+	
+	Ti.API.info(&#039;TiDynamicGrid -&gt; Widget initialized.&#039;);
+	addGridItems(data);	
+};
+
+var addGridItems = function(args){
+	//clearGrid();
+	data = args || {};
+	for (var x=0;x &lt; data.length; x++){
+		addGridItem(data[x]);
+	}
+};
+
+var addGridItem = function(item){
+	
+	var tmpView = Ti.UI.createView({
+		width:columnWidth,
+		height:Ti.UI.SIZE,
+		visible:true
+	});
+	tmpView.add(item.view);
+    tmpView.addEventListener(&#039;click&#039;, function(e) {
+        onItemClick(e.source.image);
+    });
+	$.tdgMain.add(tmpView);
+    $.tdgScrollView.children[currentCol].add(tmpView);
+
+    currentCol++;
+
+    if(currentCol == colViews.length){
+        currentCol=0;
+    }
+    /*
+    setTimeout(function(){
+        //Ti.API.info(&#039;Item Height is:&#039; + tmpView.size.height);
+
+        var frame = Ti.UI.createView({
+            width:Ti.UI.FILL,
+            height:Ti.UI.SIZE,
+            backgroundColor:itemsOptions.backgroundColor,
+            bottom:space+&quot;dp&quot;,
+            borderColor:itemsOptions.borderColor,
+            borderRadius:itemsOptions.borderRadius,
+            borderWidth:itemsOptions.borderWidth
+        });
+
+        var overlay = Ti.UI.createView({
+            width:Ti.UI.FILL,
+            height:Ti.UI.SIZE,
+            backgroundColor:&#039;green&#039;,
+            zIndex:2,
+            data:item.data
+        });
+
+        var gridElement = item.view;
+
+        //ADD CUSTOM FUNCTION ONCE AN ITEM IS CLICKED
+        overlay.addEventListener(&#039;click&#039;,function(e){
+            alert(&#039;clicked&#039;);
+            onItemClick(e);
+        });
+
+        frame.add(gridElement);
+        frame.add(overlay);
+
+        $.tdgMain.remove(tmpView);
+        tmpView = null;
+
+        $.tdgScrollView.children[currentCol].add(frame);
+        currentCol++;
+
+        if(currentCol == colViews.length){
+            currentCol=0;
+        }
+    },delayTime);
+    */
+};
+
+var clearGrid = function(){
+	Ti.API.info(&#039;TiDynamicGrid -&gt; clearGrid ran.&#039;);
+	$.tdgScrollView.removeAllChildren();
+};
+
+var setOnItemClick = function(fnt){
+	onItemClick = fnt || function(){Ti.API.info(&#039;TiDynamicGrid -&gt; onItemClick is not defined.&#039;);};
+};
+
+exports.init=init;
+exports.addGridItems = addGridItems;
+exports.clearGrid = clearGrid;
+exports.addGridItem = addGridItem;
+exports.setOnItemClick = setOnItemClick;</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

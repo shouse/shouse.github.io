@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/widgets/com.sivci.logger/controllers/widget.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/widgets/com.sivci.logger/controllers/widget.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">69.40</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">270</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">29.74</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.93</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * This is the main controller for the logger widget
+ * @Class Widget.Logger
+ * @author Steven House ,steven.house@sprint.com.
+ *
+ */
+
+_ = require(&#039;alloy/underscore&#039;)._;
+var moment = require(&#039;moment&#039;);
+// Include logging utility
+var log = Alloy.Globals.log;
+
+addEventListeners();
+updateListView();
+
+/**
+ * Add event listeners;
+ */
+function addEventListeners() {
+    $.buttonFilterAll.addEventListener(&#039;click&#039;, function() {
+        updateListView();
+    });
+    $.buttonFilterDebug.addEventListener(&#039;click&#039;, function() {
+        updateListView(&#039;D&#039;);
+    });
+    $.buttonFilterInfo.addEventListener(&#039;click&#039;, function() {
+        updateListView(&#039;I&#039;);
+    });
+    $.buttonFilterWarn.addEventListener(&#039;click&#039;, function() {
+        updateListView(&#039;W&#039;);
+    });
+    $.buttonFilterError.addEventListener(&#039;click&#039;, function() {
+        updateListView(&#039;E&#039;);
+    });
+}
+
+/**
+ * Show more info
+ * @method listViewItemClick
+ * @param {e} itemClicked
+ */
+function listViewItemClick(e) {
+    //alert(e.itemId);
+    // Open the detail page / pane for the log information
+    var detail = Widget.createController(&#039;LogDetail&#039;, {
+        message: e.itemId
+    }).getView();
+
+    if (Alloy.isTablet) {
+        $.viewContainerMain.width = &quot;50%&quot;;
+        $.viewDetailTablet.add(detail);
+    } else {
+        // @TODO Set the back botton
+        $.viewDetail.add(detail);
+        $.viewDetail.height = Ti.UI.FILL;
+    }
+}
+
+/**
+ * Display the SEs
+ * @method updateListView
+ */
+function updateListView(level) {
+    level = _.isUndefined(level) ? &#039;all&#039; : level;
+    levels = [&#039;D&#039;, &#039;I&#039;, &#039;W&#039;, &#039;E&#039;];
+
+    //var logs = log.logCollection.toJSON();
+    var logs = log.getLogs();
+    logs = logs.toJSON();
+
+    var logsToDisplay = _.filter(logs, function(log) {
+        return (level == &#039;all&#039;) || levels.indexOf(log.level) &gt;=
+            levels.indexOf(level);
+    });
+
+    logsToDisplay = _(logsToDisplay).sortBy(function(log) {
+        return log.time;
+    }).reverse();
+
+    var colors = {
+        E: &#039;#EE0000&#039;,
+        W: &#039;#E48743&#039;,
+        I: &#039;#EEEEEE&#039;,
+        D: &#039;#00DD00&#039;
+    };
+
+    // Create an array of ListDataItems.
+    var data = _.map(logsToDisplay, function(log) {
+        return {
+            template: &#039;templateMain&#039;,
+            labelLogType: {
+                text: log.level,
+                backgroundColor: colors[log.level] || &#039;#FFF&#039;
+            },
+            labelDescription: {
+                text: log.message
+            },
+            labelDate: {
+                text: moment(log.time).fromNow()
+            },
+            properties: {
+                searchableText: log.message,
+                itemId: log.message
+            }
+        };
+    });
+
+    // Create the ListSection to use from the array of ListDataItems.
+    var listSection = Titanium.UI.createListSection({
+        items: data
+    });
+
+    $.listView.sections = [listSection];
+}
+
+/**
+ * Display the Remote Logs
+ */
+function updateListViewRemote(logs) {
+    var level = &quot;E&quot;;
+    //level = _.isUndefined(level) ? &#039;all&#039; : level;
+    levels = [&#039;D&#039;, &#039;I&#039;, &#039;W&#039;, &#039;E&#039;];
+
+    //var logs = log.logCollection.toJSON();
+
+    var logsToDisplay = _.filter(logs, function(log) {
+        return (level == &#039;all&#039;) || levels.indexOf(log.level) &gt;=
+            levels.indexOf(level);
+    });
+
+    logsToDisplay = _(logsToDisplay).sortBy(function(log) {
+        return log.created_at;
+    }).reverse();
+
+    var colors = {
+        E: &#039;#EE0000&#039;,
+        W: &#039;#E48743&#039;,
+        I: &#039;#EEEEEE&#039;,
+        D: &#039;#00DD00&#039;
+    };
+
+    // Create an array of ListDataItems.
+    var data = _.map(logsToDisplay, function(log) {
+        return {
+            template: &#039;templateRemote&#039;,
+            labelLogType: {
+                text: log.level,
+                backgroundColor: colors[log.level] || &#039;#FFF&#039;
+            },
+            labelDescription: {
+                text: log.message
+            },
+            labelDate: {
+                //text: moment(log.created_at).format(
+                //&#039;MMMM Do YYYY, h:mm:ss a&#039;)
+
+                text: moment(log.created_at).fromNow()
+            },
+            labelExtra: {
+                text: log.appName + &quot; ver: &quot; + log.appVer +
+                    &quot;, ADID: &quot; + log.adid
+            },
+            properties: {
+                searchableText: log.message,
+                itemId: log.message
+            }
+        };
+    });
+
+    // Create the ListSection to use from the array of ListDataItems.
+    var listSection = Titanium.UI.createListSection({
+        items: data
+    });
+
+    $.listView.sections = [listSection];
+}
+
+/**
+ * Delete the local logs.
+ * @method deleteLogs
+ */
+function deleteLogs() {
+    // Delete the local logs.
+    log.reset();
+    // Update the view.
+    updateListView();
+    // Change the window title to reflect what is displayed.
+    $.labelTitle.text = &#039;Local Device Log&#039;;
+}
+
+/**
+ * This toggles the display between local and remote logs.
+ * @method toggleLocalRemote
+ */
+function toggleLocalRemote() {
+    switch ($.labelTitle.text) {
+        case &#039;Local Device Log&#039;:
+            // Switch to remote logs.
+            log.queryRemote({
+                success: function(resp) {
+                    // Time to display logs
+                    updateListViewRemote(resp.cloudLog);
+                },
+                error: function(resp) {
+                    log.error(
+                        &#039;logging.js: queryRemote error resp: &#039; +
+                        JSON.stringify(resp, null, 4));
+                }
+            });
+
+            // Change the window title to reflect what is displayed.
+            $.labelTitle.text = &#039;Remote Device Log&#039;;
+            break;
+
+        case &#039;Remote Device Log&#039;:
+            // Switch to local logs.
+            updateListView();
+
+            // Change the window title to reflect what is displayed.
+            $.labelTitle.text = &#039;Local Device Log&#039;;
+            break;
+    }
+}
+
+/**
+ * This invokes the Login window to slide up, covering the other display.
+ * It currently accepts args but doesn&#039;t do anything with them
+ * @method show
+ * @param {Object} args
+ */
+exports.show = function(args) {
+    args = args || {};
+    var title = &#039;Local Device Log&#039;;
+
+    if (OS_ANDROID) {
+        $.labelTitle.text = title;
+
+        $.win.orientationModes = [Ti.UI.PORTRAIT];
+        $.win.open({
+            modal: true,
+            navBarHidden: true,
+            animated: true,
+            activityEnterAnimation: Ti.App.Android.R.anim.slide_in_bot,
+            activityExitAnimation: Ti.App.Android.R.anim.slide_out_bot
+        });
+    } else {
+        $.win.title = title;
+
+        $.win.open({
+            modal: true,
+            navBarHidden: false,
+            animated: true,
+            modalStyle: Ti.UI.iPhone.MODAL_PRESENTATION_FULLSCREEN,
+            modalTransitionStyle: Ti.UI.iPhone.MODAL_TRANSITION_STYLE_COVER_VERTICAL
+        });
+    }
+
+    updateListView(&#039;I&#039;);
+};
+
+/**
+ * This dismisses the Logging window
+ * @method dismiss
+ */
+function dismiss() {
+    if (OS_ANDROID) {
+        $.win.close({
+            animated: true,
+            activityEnterAnimation: Ti.App.Android.R.anim.slide_in_bot,
+            activityExitAnimation: Ti.App.Android.R.anim.slide_out_bot
+        });
+    } else {
+        $.win.close({
+            animated: true
+        });
+    }
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

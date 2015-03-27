@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/controllers/TodoList.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/controllers/TodoList.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">67.36</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">277</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">26.14</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.96</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * This is the controller file for &quot;TodoList&quot;.
+ *
+ * @class Controller.TodoList
+ * @author Steven House
+ * @email steven.m.house@gmail.com
+ */
+
+// Include logging utility
+var log = Alloy.Globals.log;
+log.info(&#039;[TodoList] : Opened Page&#039;);
+
+
+var todo = Alloy.Collections.instance(&quot;ToDo&quot;);
+todo.fetch();
+
+var moment = require(&#039;moment&#039;);
+
+init();
+addEventListeners();
+
+/**
+ * Start the controller running
+ * @method init
+ * @return
+ */
+function init() {
+    //log.debug();
+    setupNav();
+
+    log.debug(&#039;[TodoList] : Initializing&#039;);
+    // If there is no existing todo records, get standard set
+    if (todo.length &gt; 0) {
+        todoSuccess();
+    } else {
+        getTasks();
+    }
+
+
+
+    if (Alloy.isTablet) {
+        //Alloy.Globals.Menu.setSideContent(&#039;TodoListHistory&#039;);
+    }
+
+}
+
+/**
+ * Setup the Nav Bar
+ * @method setupNav
+ */
+function setupNav() {
+    Alloy.Globals.Menu.setTitle(&quot;ToDo List&quot;);
+    Alloy.Globals.Menu.setColor(&quot;#aaa&quot;);
+
+    // Add menu
+    Alloy.Globals.Menu.setButton({
+        button: &#039;l1&#039;,
+        image : &quot;/images/Propelics.Logo.100x100.png&quot;,
+        success: function() {
+            log.debug(&#039;[TodoList] : Redirecting to HomePage&#039;);
+            Alloy.Globals.Menu.showInfoBar({title: &quot;Check out this drawer with nothing in it&quot;});
+            Alloy.Globals.Menu.toggleLeftSlider();
+        }
+    });
+
+    Alloy.Globals.Menu.setButton({
+        button: &#039;r2&#039;,
+        image: &quot;/images/action/ic_search_white_48dp.png&quot;,
+        success: function() {
+            if ($.search.height == 0) {
+                $.search.height = 44;
+            } else {
+                $.search.height = 0;
+            }
+
+        }
+    });
+
+    Alloy.Globals.Menu.setButton({
+        button: &#039;r1&#039;,
+        image: &quot;/images/action/ic_add_white_48dp.png&quot;,
+        success: function() {
+            Alloy.Globals.Menu.setMainContent(&#039;TodoListNewEdit&#039;);
+        }
+    });
+
+    Alloy.Globals.Menu.showButton(&#039;r1&#039;);
+    Alloy.Globals.Menu.showButton(&#039;r2&#039;);
+    Alloy.Globals.Menu.showButton(&#039;l1&#039;);
+}
+
+/**
+ * Add event listeners for the ListView.
+ * &#039;itemclick&#039; - open detail window
+ * &#039;swipe left&#039; - Set Reminder
+ * &#039;swipe right&#039; - Mark as Done
+ * @method addEventListeners
+ * @return
+ */
+function addEventListeners() {
+
+     // Filter: ALL
+     //$.viewFilterAll.addEventListener(&#039;click&#039;, function(e){
+     $.labelFilterAll.addEventListener(&#039;click&#039;, function(e) {
+         //$.search.height = &#039;0dp&#039;;
+         filter(e.source.id);
+     });
+
+     // Filter: DONE
+     $.labelFilterDone.addEventListener(&#039;click&#039;, function(e) {
+        //$.search.height = &#039;0dp&#039;;
+        filter(e.source.id);
+     });
+
+    // Item Clicked
+    $.listViewTodo.addEventListener(&#039;itemclick&#039;, function(e) {
+        log.warn(e.sectionIndex);
+        log.warn(e.itemId);
+        log.warn(e.itemIndex);
+        if (Alloy.isTablet) {
+            Alloy.Globals.Menu.setSideContent(&#039;TodoListDetail&#039;, {todo_id: e.itemId});
+        } else {
+            // Open our ToDo List Detail controller
+            //var todoDetail = Alloy.createController(&#039;TodoListDetail&#039;, {todo_id: e.itemId}).getView();
+            //Alloy.Globals.navWindow.open(todoDetail);
+            Alloy.Globals.Menu.setMainContent(&#039;TodoListDetail&#039;, {todo_id: e.itemId});
+        }
+    });
+}
+
+/**
+ * Filter the results of the list view
+ * @method filter
+ * @param {} item
+ * @return
+ */
+function filter(item) {
+    switch (item) {
+        case &quot;viewFilterAll&quot;:
+        case &quot;labelFilterAll&quot;:
+            var sections = $.listViewTodo.getSections();
+            _.each(sections, function(section) {
+                $.listViewTodo.deleteSectionAt(0);
+            });
+            todoSuccess();
+            break;
+        case &quot;viewFilterDone&quot;:
+        case &quot;labelFilterDone&quot;:
+            var sections = $.listViewTodo.getSections();
+            _.each(sections, function(section) {
+                $.listViewTodo.deleteSectionAt(0);
+            });
+
+            var doneCollection = _.where(todo.toJSON(), {status: 1});
+            todoSuccess(doneCollection);
+            break;
+    }
+}
+
+/**
+ * This checks if todo items have been loaded,
+ * then loads from data file or bypass reload
+ * @method getTasks
+ * @return
+ */
+function getTasks() {
+    // If there are no models in the collection, let&#039;s start out with some demo data
+    if (todo.length === 0) {
+        var todoJSON = require(&#039;data/ToDo&#039;).getTasks();
+        log.debug(&#039;[TodoList] : getTasks() : todo = &#039;, todoJSON);
+
+        //Alloy.Collections.ToDo.reset(todoJSON);
+        //Alloy.Collections.ToDo.reset(todoJSON);
+        _.each(todoJSON, function(item){
+            var todoModel = Alloy.createModel(&quot;ToDo&quot;, item);
+            todoModel.save();
+        });
+        todo.fetch();
+    }
+
+    todoSuccess();
+}
+
+/**
+ * Add the todo records to the List View Section
+ * @method todoSuccess
+ * @param {} recordsToShow
+ * @return
+ */
+function todoSuccess(recordsToShow) {
+    var sortedCollection;
+
+    if (recordsToShow) {
+        sortedCollection = recordsToShow;
+    } else {
+        sortedCollection = _.sortBy(Alloy.Collections.ToDo.toJSON(),
+            function(item) {
+                // return item.intervalMileage;
+            });
+    }
+
+    log.debug(&#039;[TodoList] : todoSuccess() : sortedCollection&#039;, sortedCollection);
+
+    var data = [];
+
+    // Push data to the List View
+    _.each(sortedCollection, function(todoItem) {
+        var date = &quot;&quot;;
+        if (todoItem.dueDateDateTime) {
+            date = moment(todoItem.dueDateDateTime).format(&quot;MM DD&quot;);
+        }
+
+        data.push({
+            viewStatusColor: {
+                backgroundColor: todoItem.status ? &quot;green&quot; : &quot;&quot;
+            },
+            imageViewCheckmark: {
+                image: todoItem.status ? &quot;/images/navigation/ic_check_black_48dp.png&quot; : &quot;&quot;,
+                left: 10,
+                right:10
+            },
+            itemTitle: {
+                text: todoItem.name,
+                font: {
+                    fontSize: &#039;18sp&#039;
+                },
+                left: 5
+            },
+            itemContent: {
+                text: todoItem.content
+            },
+            labelDueDate: {
+                text: date
+            },
+            properties: {
+                itemId: todoItem.todo_id,
+                searchableText: todoItem.name,
+                backgroundColor: &#039;#fff&#039;,
+                height: 90
+            }
+        });
+    });
+
+    var listSection = Titanium.UI.createListSection({
+        // properties
+        items: data,
+        //headerView : listSectionHeaderView
+        headerTitle: &quot;To-do List&quot;
+    });
+
+    $.listViewTodo.appendSection(listSection);
+}
+
+/**
+ * Delete an item
+ * @param e
+ */
+function deleteItem(e){
+    var section = e.section;
+    var todo_id = e.itemId;
+    var itemIndex = e.itemIndex;
+    log.warn(&quot;deleteItem: &quot; + JSON.stringify(e, null, 4));
+    var opts = {
+        options: [&#039;Yep!&#039;, &#039;Changed my mind&#039;],
+        selectedIndex: 0,
+        destructive: 0,
+        title: &quot;Do You Want to DELETE This Item?&quot;
+    };
+
+
+     var dialog = Ti.UI.createOptionDialog(opts);
+     dialog.show();
+     dialog.addEventListener(&#039;click&#039;, function(e) {
+         if (e.index == 0) {
+             var todoItem = _.first(todo.where({ todo_id: todo_id }));
+             todo.remove(todoItem);
+             todoItem.destroy();
+             todo.fetch();
+             section.deleteItemsAt(itemIndex, 1);
+             Alloy.Globals.Menu.showInfoBar({title: &quot;Deleted Task!&quot;});
+             return;
+         } else {
+             Alloy.Globals.Menu.showInfoBar({title: &quot;Not Deleted!&quot;});
+         }
+     });
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

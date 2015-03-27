@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/lib/NavController.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/lib/NavController.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">68.48</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">264</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">16.99</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.06</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * @class NavController
+ *
+ * This is an updated Navigation Controller for Appcelerator Titanium
+ * Its origon is first, from Forging Titanium Episode 2, then adapted by ___________ to
+ * coincide with current practice with CommonJS and the rest of the application.
+ *
+ * This current update is to align with best practices / requirements with Ti SDK 3.2.
+ * Specifically iOS had an API update that depricated Ti.UI.iPhone.createNavigationGroup();
+ * and replaced it with Ti.UI.iOS.createNavigationWindow();
+
+ * @see: http://docs.appcelerator.com/titanium/latest/#!/guide/iOS_7_Migration_Guide-section-37533766_iOS7MigrationGuide-Titanium.UI.iOS.NavigationWindow
+ */
+
+// Gather utilities for use
+_ = require(&quot;alloy/underscore&quot;)._;
+Alloy = require(&quot;alloy&quot;);
+Backbone = require(&quot;alloy/backbone&quot;);
+
+// Add Logging capability
+var log = Alloy.Globals.log;
+log.info(&quot;[NavController] : Opened NavController&quot;);
+
+/**
+ * Class Declaration
+ * @TODO: Add SplitWindow capabilities here
+ * @method NavController
+ * @param {Object} args this is a set of arguments to be passed to the constructor
+ * @return
+ */
+exports.NavController = function(args) {
+    log.info(&#039;[NavController] : Initialized&#039;, args);
+
+    // Saving context to &#039;_self&#039; variable
+    _self = this;
+
+    //--------------  PUBLIC PROPERTIES --------------//
+    // can be direcly accessed by the user
+    _self.version = 0.1;
+
+    // Backbone stuff
+    _self.navCollection;
+    _self.navModel;
+
+    // Constructor arguments
+    var args = args || {};
+    var splitWindow = false;
+
+    // Class variables
+    // this.deviceInfo = [contain username, model, osname, version]
+    // + [networkType, macAddress, processorCount, address, ostype]
+    // + [batteryState, batteryPercent, availMem] at LAUNCH TIME
+    var deviceInfo = require(&#039;deviceInfo&#039;).getDeviceInfo();
+    var splitWindow;
+
+    // Stack to hold windows
+    var windowStack = [];
+    var currentWindow = null;
+    var currentStackPosition = null;
+    var windowHistory = [];
+
+    // iOS variables that will enable navigation
+    var rootWin = null;
+    var navWin = null;
+
+    // This could be used for a window open/close hook based system
+    var windowHooks = {};
+
+    // Initialize BACKBONE support!  Woohoo!
+    var collection = Backbone.Collection.extend({});
+
+    //@TODO extend the model here????
+    var model = Backbone.Model.extend({
+        adapter: {
+            type: &quot;properties&quot;
+        }
+    });
+
+    //-------------- PUBLIC METHODS --------------//
+    // Initialization if necessary
+    /**
+     * Description
+     * @method init
+     * @param {} args
+     * @return
+     */
+    _self.init = function(args) {
+        args = args || {};
+        splitWindow = args.splitWindow ? args.splitWindow : false;
+        _self.navCollection = new collection();
+    };
+
+    /**
+     * Function to open a window
+     * @method open
+     * @param {} win
+     * @return
+     */
+    _self.open = function(win) {
+        //log.warn(&#039;[NavController] : Opening &#039; + JSON.stringify(win, null, 4));
+
+        // Add in the Backbone magic
+        //createModel(win);
+
+        // Add the window to the stack of windows managed by the controller
+        windowStack.push(win);
+
+        // Grab a copy of the current nav controller for use in the callback
+        var that = this;
+
+        // Add Event Listener: CLOSE
+        win.addEventListener(&#039;close&#039;, function() {
+            log.info(&#039;[NavController] : Closed window&#039;);
+            that.windowStack.pop();
+        });
+
+        // If this is the FIRST window, need special treatement
+        if (windowStack.length === 1) {
+            if (Ti.Platform.osname === &#039;android&#039;) {
+                log.info(
+                    &quot;[NavController] : Opening FIRST Android window&quot;
+                );
+                openFirstWinAndroid(win);
+            } else {
+                openFirstWinIOS(win);
+            }
+        }
+        // All subsequent windows
+        else {
+            if (Ti.Platform.osname === &#039;android&#039;) {
+                log.info(&quot;OPENING another Android Window&quot;);
+                win.open();
+            } else {
+                var winTransition = Titanium.UI.iPhone.AnimationStyle.FLIP_FROM_LEFT;
+                navWin.openWindow(win, {
+                    animated: true,
+                    fullscreen: true,
+                    transition: winTransition
+                });
+            }
+        }
+    };
+
+    /**
+     * Go back to the initial window of the NavigationController
+     * @method home
+     * @return
+     */
+    _self.home = function() {
+        log.info(&#039;[NavController] : OPENING home window&#039;);
+        // Store a copy of all the current windows on the stack
+        var windows = windowStack.concat([]);
+
+        // Because we are going back to HOME we need to close ALL other windows.
+        // Special attention
+        _.each(windows, function(win) {
+            (navWindow) ? navWin.close(win): win.close();
+        });
+
+        // Reset the window stack
+        // @TODO Understand this
+        windowStack = _.first(windowStack);
+    };
+
+    /**
+     * Close a window
+     * @method close
+     * @param {} win
+     * @return
+     */
+    _self.close = function(win) {
+        // Close it and remove from stack (handled by close listener)
+        // ANDROID
+        if (Ti.Platform.osname === &#039;android&#039;) {
+            win.close();
+        }
+        // iOS
+        else {
+            var win = Ti.UI.currentWindow;
+            navWin.closeWindow(win);
+            // @TODO Fire event here??
+        }
+    };
+
+    //-------------- PRIVATE METHODS --------------//
+    /**
+     * Handle Backbone Model creation here.
+     * @method createModel
+     * @param {} win
+     * @return
+     */
+    function createModel(win) {
+        // Create a new backbone model and add it to the collection
+        var nav = new model({
+            title: level,
+            args: message,
+            time: new Date()
+        });
+        //log.save();
+        _self.navCollection.add(nav);
+    }
+
+    /**
+     * Opens first Android window
+     * @method openFirstWinAndroid
+     * @param {} win
+     * @return
+     */
+    function openFirstWinAndroid(win) {
+        win.exitOnClose = true;
+
+        /*
+		// Add Event Listener: OPEN
+		win.addEventListener(&#039;open&#039;, function(e) {
+			// Setup flurry sessions
+			//Flurry.onStartSession(Alloy.Globals.ThemeConfig.flurryAPIKey);
+
+			// Add listener to the activity
+			// @TODO WHAT IS THE ACTIVITY???
+			var activity = win.activity;
+
+			// Add Event Listener: PAUSE
+			activity.addEventListener(&#039;pause&#039;, function(e) {
+				log.info(&#039;[NavController] : APPLICATION PAUSED&#039;);
+				//Flurry.onEndSession();
+			});
+			// Add Event Listener: RESUME
+			activity.addEventListener(&#039;resume&#039;, function(e) {
+				log.info(&#039;[NavController] : APPLICATION RESUMED&#039;);
+				//Flurry.onStartSession(Alloy.Globals.ThemeConfig.flurryAPIKey);
+			});
+		});
+		*/
+
+        win.orientationModes = [Ti.UI.PORTRAIT, Ti.UI.UPSIDE_PORTRAIT];
+
+        win.open();
+
+        // Add Event Listener: CLOSE
+        win.addEventListener(&#039;close&#039;, function() {
+            log.info(
+                &#039;[NavController] : - Leaving application, close&#039;
+            );
+        });
+
+        win.addEventListener(&#039;androidback&#039;, function(e) {
+            log.debug(
+                &quot;[NavController] : Android back hardware button pressed.&quot;
+            );
+            Alloy.Globals.Menu.goBack();
+        });
+
+        Alloy.Globals.mainWin = win;
+    }
+
+    /**
+     * Opens first iOS window
+     * @method openFirstWinIOS
+     * @param {} win
+     * @return
+     */
+    function openFirstWinIOS(win) {
+        log.info(&#039;[NavController] : Opening first window&#039;, win);
+
+        /*
+		// NEW iOS
+		//rootWin = Ti.UI.createWindow();
+		navWin = Ti.UI.iOS.createNavigationWindow({
+			window : win
+		});
+
+		// Open the Navigation Group - This is the Navigation ROOT
+		navWin.open();
+		*/
+        win.open();
+
+    }
+
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

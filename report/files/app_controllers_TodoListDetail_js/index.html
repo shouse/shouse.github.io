@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/controllers/TodoListDetail.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/controllers/TodoListDetail.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">62.76</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">567</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">37.83</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">4.51</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * This is the controller file for &quot;TodoDetail&quot;
+ *
+ * @class Controller.TodoListDetail
+ * @author Steven House
+ * @email steven.m.house@gmail.com
+ */
+
+// Include logging utility
+var log = Alloy.Globals.log;
+log.info(&quot;Opened TodoListDetails&quot;);
+
+var args = arguments[0] || {};
+var todo_id = args.todo_id || &quot;&quot;;
+
+var todo = Alloy.Collections.instance(&quot;ToDo&quot;);
+
+
+
+var todoItem = _.first(todo.where({ todo_id: parseInt(todo_id) }));
+
+var galleryExists = false;
+var checkBox;
+var moment = require(&#039;moment&#039;);
+
+init();
+
+/**
+ * Start the controller running
+ * @method init
+ * @return
+ */
+function init() {
+    setupNav();
+    addEventListeners();
+    addCheckbox();
+
+    $.labelTitle.text = todoItem.get(&quot;name&quot;).toUpperCase();
+
+    if (todoItem.get(&quot;content&quot;) &amp;&amp; todoItem.get(&quot;content&quot;).length &gt; 0) {
+        $.labelContent.text = todoItem.get(&quot;content&quot;);
+        $.viewContentContainer.height = Ti.UI.SIZE;
+    } else {
+        $.viewContentContainer.height = 0;
+    }
+
+    if (hasDueDate()) {
+        $.labelDueDate.text = &quot;Due &quot; + moment(todoItem.get(&#039;dueDateDateTime&#039;)).fromNow();
+    }
+
+    /*
+     if (hasReminder()) {
+     $.viewAptTime.height = 44;
+     $.viewScheduleApt.height = 0;
+     $.addClass($.viewScheduleApt, &#039;bgDarkGreen&#039;);
+
+     var reminderDate = todoItem.get(&#039;reminderDateTime&#039;);
+
+     var dateText = moment.utc(reminderDate).fromNow();
+     $.labelReminder.text = dateText;
+     // + reminderDate;
+     }
+     */
+
+}
+
+/**
+ * Setup the Nav Bar
+ * @method setupNav
+ */
+function setupNav() {
+    Alloy.Globals.Menu.setTitle(&quot;Detail View&quot;);
+    // Add menu
+    Alloy.Globals.Menu.setButton({
+        button: &#039;l1&#039;,
+        image : &quot;/images/navigation/ic_chevron_left_white_48dp.png&quot;,
+        success: function() {
+            log.debug(&#039;[Maintain] : Redirecting to HomePage&#039;);
+            Alloy.Globals.Menu.setMainContent(&#039;TodoList&#039;);
+        }
+    });
+
+    // Add menu
+    Alloy.Globals.Menu.setButton({
+        button: &#039;r1&#039;,
+        image : &quot;/images/action/ic_mode_edit_white_48dp.png&quot;,
+        success: function() {
+            log.debug(&#039;[Maintain] : Redirecting to Edit Page&#039;);
+            Alloy.Globals.Menu.setMainContent(&#039;TodoListNewEdit&#039;, {todo_id: todoItem.get(&#039;todo_id&#039;)});
+        }
+    });
+
+    Alloy.Globals.Menu.showButton(&#039;l1&#039;);
+    Alloy.Globals.Menu.showButton(&#039;r1&#039;);
+    Alloy.Globals.Menu.hideButton(&#039;r2&#039;);
+}
+
+/**
+ * Add event listeners for the ListView.
+ * @method addEventListeners
+ * @return
+ */
+function addEventListeners() {
+    // Set A Due Date
+    $.viewDueDate.addEventListener(&#039;click&#039;, setDueDate);
+
+    // Capture a photo
+    $.viewPhoto.addEventListener(&#039;click&#039;, captureImage);
+
+    // Share the task
+    $.viewShare.addEventListener(&#039;click&#039;, shareTask);
+
+    // Share the task
+    $.viewGallery.addEventListener(&#039;click&#039;, function(){
+        Alloy.Globals.Menu.setMainContent(&#039;TodoListGallery&#039;, {todo_id: todoItem.get(&quot;todo_id&quot;)});
+    });
+}
+
+/**
+ * Add a checkbox
+ * @method checkboxStuff
+ */
+function addCheckbox() {
+    checkbox = Alloy.createWidget(&quot;sh.checkbox&quot;, {value: todoItem.get(&quot;status&quot;)});
+    //checkbox.value = false;
+
+    // Create a handler for the change event.
+    checkbox.on(&#039;change&#039;, function(e) {
+        //toggleStatus(checkbox.value);
+        toggleStatus();
+    });
+    // Add the checkbox to the view.
+    $.viewCheckboxContainer.add(checkbox.getView());
+}
+
+/**
+ * Handles the done click event listener
+ * @method done
+ * @return
+ */
+function toggleStatus() {
+    log.warn(&quot;[Task Details] toggling status to &quot; + !todoItem.get(&quot;status&quot;));
+    if (todo.get(&quot;status&quot;) == 0){
+        todoItem.set({
+            status: 1,
+            completedDateTime: new Date().toISOString(),
+            lastModifiedDateTime: new Date().toISOString()
+        });
+        Alloy.Globals.Menu.showInfoBar({title: &quot;Keep Up The Good Work!&quot;});
+    } else {
+        todoItem.set({
+            status: 0,
+            completedDateTime: undefined,
+            lastModifiedDateTime: new Date().toISOString()
+        });
+    }
+
+    todoItem.save();
+    todo.fetch();
+}
+
+/**
+ * See if is Done
+ * @method isDone
+ */
+function isDone() {
+    return todoItem.get(&#039;status&#039;);
+}
+
+/**
+ * Checks if item has dueDate and changes UI based on this
+ * @method hasDueDate
+ */
+function hasDueDate() {
+    return todoItem.get(&#039;dueDateDateTime&#039;);
+}
+
+/**
+ * Checks if item has dueDate and changes UI based on this
+ * @method hasDueDate
+ */
+function hasReminder() {
+    return todoItem.get(&#039;reminderDateTime&#039;);
+}
+
+/**
+ * Checks if item has photos and changes UI based on this
+ * @method hasPhoto
+ */
+function hasPhoto() {
+    return todoItem.get(&#039;hasPhoto&#039;);
+}
+
+/**
+ * Invoke the calendar module to set a date
+ * @method setReminder
+ * @return
+ */
+function setDueDate() {
+    log.debug(&#039;[TodoDetail] : setDueDate&#039;);
+
+    if (Ti.Platform.osname === &#039;android&#039;) {
+        var now = new Date();
+        var month = now.getUTCMonth() + 1;
+        var day = now.getUTCDate();
+        var year = now.getUTCFullYear();
+
+        var Dialogs = require(&quot;yy.tidialogs&quot;);
+        // Create the dialog
+
+        // value property is priority
+        var picker = Dialogs.createDatePicker({
+            okButtonTitle: &#039;Set&#039;,         // &lt;-- optional, default &quot;Done&quot;
+            cancelButtonTitle: &#039;Cancel&#039;,  // &lt;-- optional, default &quot;Cancel&quot;
+            value: new Date(),            // &lt;-- optional
+            day: day,                     // &lt;-- optional
+            month: month,                 // &lt;-- optional - java/javascript month, i.e. August
+            year: year                    // &lt;-- optional
+        });
+
+        // Add the click listener
+        picker.addEventListener(&#039;click&#039;,function(e){
+            if (!e.cancel) {
+                saveDate(e.value, &quot;Due Date&quot;);
+            } else {
+                // Android Cancel Date
+            }
+        });
+
+        // Cancel listener
+        picker.addEventListener(&#039;cancel&#039;, function() {
+            Ti.API.info(&quot;dialog was cancelled&quot;);
+        });
+
+        // open it
+        picker.show();
+    }
+    // iOS will use different date picker
+    else {
+        $.viewRow.height = 0;
+
+        var calendar = require(&#039;ti.sq&#039;);
+
+        var now = new Date();
+        var month = now.getUTCMonth() + 1;
+        var day = now.getUTCDate();
+        var year = now.getUTCFullYear();
+
+        var minYear = year - 1;
+        var maxYear = year + 1;
+
+        var calValue = {
+            month: month,
+            day: day,
+            year: year
+        };
+        var calMin = {
+            month: month,
+            day: day,
+            year: minYear
+        };
+        var calMax = {
+            month: month,
+            day: day,
+            year: maxYear
+        };
+
+        var calendarView = calendar.createView({
+            height: Ti.UI.FILL,
+            width: Ti.UI.FILL,
+            top: 0,
+            left: 10,
+            right: 10,
+            //bottom: 65,
+            pagingEnabled: true,
+            value: {
+                month: month,
+                day: day,
+                year: year
+            },
+            min: {
+                month: month,
+                day: 1,
+                year: year
+            },
+            max: {
+                month: month,
+                day: day,
+                year: maxYear
+            }
+        });
+
+        $.viewMain.add(calendarView);
+
+        calendarView.addEventListener(&#039;dateChanged&#039;, function(d) {
+            var opts = {
+                options: [&#039;Yep!&#039;, &#039;Changed my mind&#039;],
+                selectedIndex: 0,
+                destructive: 0,
+                title: &#039;Set Due Date for &#039; + calendarView.value.month +
+                &#039;/&#039; + calendarView.value.day + &#039;/&#039; +
+                calendarView.value.year + &#039; ?&#039;
+            };
+
+            var dialog = Ti.UI.createOptionDialog(opts);
+            dialog.show();
+            dialog.addEventListener(&#039;click&#039;, function(e) {
+                if (e.index == 0) {
+                    saveDate(d.dateValue, &quot;Due Date&quot;);
+                } else {
+                    Alloy.Globals.Menu.showInfoBar(&quot;Due Date NOT Set&quot;);
+                }
+
+                $.viewMain.remove(calendarView);
+            });
+
+            $.viewRow.height = Ti.UI.FILL;
+
+        });
+    }
+
+}
+
+/**
+ * Invoke the calendar module to set a date
+ * @method setReminder
+ * @return
+ */
+function setReminder() {
+    log.debug(&#039;[TodoDetail] : setReminder&#039;);
+
+    if (Ti.Platform.osname === &#039;android&#039;) {
+        var now = new Date();
+        var month = now.getUTCMonth() + 1;
+        var day = now.getUTCDate();
+        var year = now.getUTCFullYear();
+
+        var Dialogs = require(&quot;yy.tidialogs&quot;);
+        // Create the dialog
+
+        // value property is priority
+        var picker = Dialogs.createDatePicker({
+            okButtonTitle: &#039;Set&#039;,         // &lt;-- optional, default &quot;Done&quot;
+            cancelButtonTitle: &#039;Cancel&#039;,  // &lt;-- optional, default &quot;Cancel&quot;
+            value: new Date(),            // &lt;-- optional
+            day: day,                     // &lt;-- optional
+            month: month,                 // &lt;-- optional - java/javascript month, i.e. August
+            year: year                    // &lt;-- optional
+        });
+
+        // Add the click listener
+        picker.addEventListener(&#039;click&#039;,function(e){
+            if (!e.cancel) {
+                saveDate(e.value, &quot;Reminder&quot;);
+            } else {
+                // Android Cancel Date
+            }
+        });
+
+        // Cancel listener
+        picker.addEventListener(&#039;cancel&#039;, function() {
+            log.info(&quot;dialog was cancelled&quot;);
+        });
+
+        // open it
+        picker.show();
+    }
+    // iOS will use different date picker
+    else {
+        $.viewRow.height = 0;
+
+        var calendar = require(&#039;ti.sq&#039;);
+
+        var now = new Date();
+        var month = now.getUTCMonth() + 1;
+        var day = now.getUTCDate();
+        var year = now.getUTCFullYear();
+
+        var minYear = year - 1;
+        var maxYear = year + 1;
+
+        var calValue = {
+            month: month,
+            day: day,
+            year: year
+        };
+        var calMin = {
+            month: month,
+            day: day,
+            year: minYear
+        };
+        var calMax = {
+            month: month,
+            day: day,
+            year: maxYear
+        };
+
+        var calendarView = calendar.createView({
+            height: Ti.UI.FILL,
+            width: Ti.UI.FILL,
+            top: 0,
+            left: 10,
+            right: 10,
+            //bottom: 65,
+            pagingEnabled: true,
+            value: {
+                month: month,
+                day: day,
+                year: year
+            },
+            min: {
+                month: month,
+                day: 1,
+                year: year
+            },
+            max: {
+                month: month,
+                day: day,
+                year: maxYear
+            }
+        });
+
+        $.viewMain.add(calendarView);
+
+        calendarView.addEventListener(&#039;dateChanged&#039;, function(d) {
+            var opts = {
+                options: [&#039;Yep!&#039;, &#039;Changed my mind&#039;],
+                selectedIndex: 0,
+                destructive: 0,
+                title: &#039;Set Reminder for &#039; + calendarView.value.month +
+                &#039;/&#039; + calendarView.value.day + &#039;/&#039; +
+                calendarView.value.year + &#039; ?&#039;
+            };
+
+            var dialog = Ti.UI.createOptionDialog(opts);
+            dialog.show();
+            dialog.addEventListener(&#039;click&#039;, function(e) {
+                if (e.index == 0) {
+                    saveDate(d.dateValue, &quot;Reminder&quot;);
+                } else {
+                    Allog.Globals.Menu.showInfoBar(&quot;Reminder NOT Set&quot;);
+                }
+
+                $.viewMain.remove(calendarView);
+            });
+
+            $.viewRow.height = Ti.UI.FILL;
+
+        });
+    }
+
+}
+
+/**
+ * @method saveDate
+ */
+function saveDate(d, type) {
+    log.debug(&quot;[TodoDetail] Set a &quot; + type +  &quot; for  : dateChanged = &quot;, d);
+    log.event({
+        type: &#039;todo&#039;,
+        action: &#039;set a &#039; + type + &#039; for&#039;,
+        description: todoItem.get(&#039;name&#039;) + &quot; &quot; + moment(d).fromNow(),
+        eventId: todoItem.get(&#039;name&#039;)
+    });
+
+    todoItem.set({ dueDateDateTime: d });
+    todoItem.save();
+    todo.fetch();
+
+    $.labelDueDate.text = &quot;Due &quot; + moment(d).fromNow();
+    //Alloy.Globals.toast.show(&quot;Reminder set!&quot;);
+    Alloy.Globals.Menu.showInfoBar({title: type + &quot; set &quot; + moment(d).fromNow() + &quot; from now&quot;});
+}
+
+/**
+ * This invokes the camera
+ * @method captureImage
+ * @return
+ */
+function captureImage() {
+    // open alert dialog
+    var opts = {
+        options: [&#039;Take a Photo&#039;, &#039;Gallery&#039;],
+        selectedIndex: 0,
+        destructive: 0,
+        title: &#039;Where do you want to find picture?&#039;
+    };
+
+    var dialog = Ti.UI.createOptionDialog(opts);
+    dialog.show();
+    dialog.addEventListener(&#039;click&#039;, function(e) {
+        if (e.index == 0) {
+            log.debug(&#039;[TodoDetail] : captureImage&#039;);
+            var camera = require(&#039;Camera&#039;);
+            camera.captureImage({success: savePhoto});
+        } else {
+            log.debug(&#039;[TodoDetail] : captureImage&#039;);
+            require(&#039;getUserGallery&#039;).fromGallery({success: savePhoto});
+        }
+
+        //$.viewMain.remove(calendarView);
+    });
+
+}
+
+/**
+ * Share a task with native share capability
+ * @shareTask
+ */
+function shareTask() {
+    require(&#039;com.alcoapps.socialshare&#039;).share({
+        status                  : &quot;I&#039;d like to share my To-Do task with you!\n\n&quot; + todoItem.get(&#039;name&#039;),
+        //image                   : fileToShare.nativePath,
+        androidDialogTitle      : &#039;Sharing is caring!!!&#039;
+    });
+}
+
+/**
+ * Show Item Gallery
+ * @method showItemGallery
+ */
+function showItemGallery() {
+
+}
+
+/**
+ * Save a photo to the SD card
+ * @method savePhoto
+ */
+function savePhoto(image) {
+    if (image.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
+
+        log.event({
+            type: &#039;todo&#039;,
+            action: &#039;captured&#039;,
+            description: &#039;an image for&#039; + todoItem.get(&#039;name&#039;),
+            eventId: todoItem.get(&#039;name&#039;)
+        });
+
+        log.debug(&#039;[TodoDetail] : captureImage : Camera Success, image = &#039;, JSON.stringify(image, null, 4));
+
+        // This part should be skipped to the existing function
+        var imageDir = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, &#039;todo&#039;);
+        if (!imageDir.exists()) {
+            imageDir.createDirectory();
+        }
+
+        // Add +1 to the existing photoCount
+        var photoCount = todoItem.get(&#039;photoCount&#039;) + 1;
+
+        var file = Ti.Filesystem.getFile(imageDir.resolve(), todo_id + photoCount + &#039;.png&#039;);
+
+        log.debug(&quot;[TodoDetail] : Saving image to = &quot;, imageDir.resolve() + todo_id + photoCount + &#039;.png&#039;);
+
+        // Write to storage
+        file.write(image.media);
+
+        todoItem.set({
+            hasPhoto: true,
+            photoCount: photoCount
+        });
+        todoItem.save();
+
+        log.debug(&#039;[TodoDetail] : Saved image to this location : &#039;, file.nativePath);
+
+    } else {
+        alert(&#039;We are only supporting images at the moment.&#039;);
+
+        todoItem.set({
+            hasVideo: true
+        });
+        todoItem.save();
+    }
+
+    todo.fetch();
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

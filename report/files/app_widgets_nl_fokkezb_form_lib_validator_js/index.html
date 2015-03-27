@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/widgets/nl.fokkezb.form/lib/validator.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/widgets/nl.fokkezb.form/lib/validator.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">69.81</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">391</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">62.53</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">4.59</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * The NPM [validator](https://www.npmjs.org/package/validator) package.
+ *
+ *     Copyright (c) 2014 Chris O&#039;Hara &lt;cohara87@gmail.com&gt;
+ *  
+ *     Permission is hereby granted, free of charge, to any person obtaining
+ *     a copy of this software and associated documentation files (the
+ *     &quot;Software&quot;), to deal in the Software without restriction, including
+ *     without limitation the rights to use, copy, modify, merge, publish,
+ *     distribute, sublicense, and/or sell copies of the Software, and to
+ *     permit persons to whom the Software is furnished to do so, subject to
+ *     the following conditions:
+ *  
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *  
+ *     THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *     LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @class Widgets.nlFokkezbForm.lib.validator
+ */
+
+(function (name, definition) {
+    if (typeof module !== &#039;undefined&#039;) {
+        module.exports = definition();
+    } else if (typeof define === &#039;function&#039; &amp;&amp; typeof define.amd === &#039;object&#039;) {
+        define(definition);
+    } else {
+        this[name] = definition();
+    }
+})(&#039;validator&#039;, function (validator) {
+
+    &#039;use strict&#039;;
+
+    validator = { version: &#039;3.16.0&#039; };
+
+    var email = /^((([a-z]|\d|[!#\$%&amp;&#039;\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&amp;&#039;\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i;
+
+    var creditCard = /^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})$/;
+
+    var isbn10Maybe = /^(?:[0-9]{9}X|[0-9]{10})$/
+      , isbn13Maybe = /^(?:[0-9]{13})$/;
+
+    var ipv4Maybe = /^(\d?\d?\d)\.(\d?\d?\d)\.(\d?\d?\d)\.(\d?\d?\d)$/
+      , ipv6 = /^::|^::1|^([a-fA-F0-9]{1,4}::?){1,7}([a-fA-F0-9]{1,4})$/;
+
+    var uuid = {
+        &#039;3&#039;: /^[0-9A-F]{8}-[0-9A-F]{4}-3[0-9A-F]{3}-[0-9A-F]{4}-[0-9A-F]{12}$/i
+      , &#039;4&#039;: /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
+      , &#039;5&#039;: /^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
+      , all: /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i
+    };
+
+    var alpha = /^[a-zA-Z]+$/
+      , alphanumeric = /^[a-zA-Z0-9]+$/
+      , numeric = /^-?[0-9]+$/
+      , int = /^(?:-?(?:0|[1-9][0-9]*))$/
+      , float = /^(?:-?(?:[0-9]+))?(?:\.[0-9]*)?(?:[eE][\+\-]?(?:[0-9]+))?$/
+      , hexadecimal = /^[0-9a-fA-F]+$/
+      , hexcolor = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+    var ascii = /^[\x00-\x7F]+$/
+      , multibyte = /[^\x00-\x7F]/
+      , fullWidth = /[^\u0020-\u007E\uFF61-\uFF9F\uFFA0-\uFFDC\uFFE8-\uFFEE0-9a-zA-Z]/
+      , halfWidth = /[\u0020-\u007E\uFF61-\uFF9F\uFFA0-\uFFDC\uFFE8-\uFFEE0-9a-zA-Z]/;
+
+    var surrogatePair = /[\uD800-\uDBFF][\uDC00-\uDFFF]/;
+
+    var base64 = /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})$/;
+
+    validator.extend = function (name, fn) {
+        validator[name] = function () {
+            var args = Array.prototype.slice.call(arguments);
+            args[0] = validator.toString(args[0]);
+            return fn.apply(validator, args);
+        };
+    };
+
+    //Right before exporting the validator object, pass each of the builtins
+    //through extend() so that their first argument is coerced to a string
+    validator.init = function () {
+        for (var name in validator) {
+            if (typeof validator[name] !== &#039;function&#039; || name === &#039;toString&#039; ||
+                    name === &#039;toDate&#039; || name === &#039;extend&#039; || name === &#039;init&#039;) {
+                continue;
+            }
+            validator.extend(name, validator[name]);
+        }
+    };
+
+    validator.toString = function (input) {
+        if (typeof input === &#039;object&#039; &amp;&amp; input !== null &amp;&amp; input.toString) {
+            input = input.toString();
+        } else if (input === null || typeof input === &#039;undefined&#039; || (isNaN(input) &amp;&amp; !input.length)) {
+            input = &#039;&#039;;
+        } else if (typeof input !== &#039;string&#039;) {
+            input += &#039;&#039;;
+        }
+        return input;
+    };
+
+    validator.toDate = function (date) {
+        if (Object.prototype.toString.call(date) === &#039;[object Date]&#039;) {
+            return date;
+        }
+        date = Date.parse(date);
+        return !isNaN(date) ? new Date(date) : null;
+    };
+
+    validator.toFloat = function (str) {
+        return parseFloat(str);
+    };
+
+    validator.toInt = function (str, radix) {
+        return parseInt(str, radix || 10);
+    };
+
+    validator.toBoolean = function (str, strict) {
+        if (strict) {
+            return str === &#039;1&#039; || str === &#039;true&#039;;
+        }
+        return str !== &#039;0&#039; &amp;&amp; str !== &#039;false&#039; &amp;&amp; str !== &#039;&#039;;
+    };
+
+    validator.equals = function (str, comparison) {
+        return str === validator.toString(comparison);
+    };
+
+    validator.contains = function (str, elem) {
+        return str.indexOf(validator.toString(elem)) &gt;= 0;
+    };
+
+    validator.matches = function (str, pattern, modifiers) {
+        if (Object.prototype.toString.call(pattern) !== &#039;[object RegExp]&#039;) {
+            pattern = new RegExp(pattern, modifiers);
+        }
+        return pattern.test(str);
+    };
+
+    validator.isEmail = function (str) {
+        return email.test(str);
+    };
+
+    var default_url_options = {
+        protocols: [ &#039;http&#039;, &#039;https&#039;, &#039;ftp&#039; ]
+      , require_tld: true
+      , require_protocol: false
+      , allow_underscores: false
+    };
+
+    validator.isURL = function (str, options) {
+        if (!str || str.length &gt;= 2083) {
+            return false;
+        }
+        options = merge(options, default_url_options);
+        var separators = &#039;-?-?&#039; + (options.allow_underscores ? &#039;_?&#039; : &#039;&#039;);
+        var url = new RegExp(&#039;^(?!mailto:)(?:(?:&#039; + options.protocols.join(&#039;|&#039;) + &#039;)://)&#039; + (options.require_protocol ? &#039;&#039; : &#039;?&#039;) + &#039;(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:www.)?)?(?:(?:[a-z\\u00a1-\\uffff0-9]+&#039; + separators + &#039;)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+&#039; + separators + &#039;)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))&#039; + (options.require_tld ? &#039;&#039; : &#039;?&#039;) + &#039;)|localhost)(?::(\\d{1,5}))?(?:(?:/|\\?|#)[^\\s]*)?$&#039;, &#039;i&#039;);
+        var match = str.match(url)
+          , port = match ? match[1] : 0;
+        return !!(match &amp;&amp; (!port || (port &gt; 0 &amp;&amp; port &lt;= 65535)));
+    };
+
+    validator.isIP = function (str, version) {
+        version = validator.toString(version);
+        if (!version) {
+            return validator.isIP(str, 4) || validator.isIP(str, 6);
+        } else if (version === &#039;4&#039;) {
+            if (!ipv4Maybe.test(str)) {
+                return false;
+            }
+            var parts = str.split(&#039;.&#039;).sort();
+            return parts[3] &lt;= 255;
+        }
+        return version === &#039;6&#039; &amp;&amp; ipv6.test(str);
+    };
+
+    validator.isAlpha = function (str) {
+        return alpha.test(str);
+    };
+
+    validator.isAlphanumeric = function (str) {
+        return alphanumeric.test(str);
+    };
+
+    validator.isNumeric = function (str) {
+        return numeric.test(str);
+    };
+
+    validator.isHexadecimal = function (str) {
+        return hexadecimal.test(str);
+    };
+
+    validator.isHexColor = function (str) {
+        return hexcolor.test(str);
+    };
+
+    validator.isLowercase = function (str) {
+        return str === str.toLowerCase();
+    };
+
+    validator.isUppercase = function (str) {
+        return str === str.toUpperCase();
+    };
+
+    validator.isInt = function (str) {
+        return int.test(str);
+    };
+
+    validator.isFloat = function (str) {
+        return str !== &#039;&#039; &amp;&amp; float.test(str);
+    };
+
+    validator.isDivisibleBy = function (str, num) {
+        return validator.toFloat(str) % validator.toInt(num) === 0;
+    };
+
+    validator.isNull = function (str) {
+        return str.length === 0;
+    };
+
+    validator.isLength = function (str, min, max) {
+        var surrogatePairs = str.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g) || [];
+        var len = str.length - surrogatePairs.length;
+        return len &gt;= min &amp;&amp; (typeof max === &#039;undefined&#039; || len &lt;= max);
+    };
+
+    validator.isByteLength = function (str, min, max) {
+        return str.length &gt;= min &amp;&amp; (typeof max === &#039;undefined&#039; || str.length &lt;= max);
+    };
+
+    validator.isUUID = function (str, version) {
+        var pattern = uuid[version ? version : &#039;all&#039;];
+        return pattern &amp;&amp; pattern.test(str);
+    };
+
+    validator.isDate = function (str) {
+        return !isNaN(Date.parse(str));
+    };
+
+    validator.isAfter = function (str, date) {
+        var comparison = validator.toDate(date || new Date())
+          , original = validator.toDate(str);
+        return !!(original &amp;&amp; comparison &amp;&amp; original &gt; comparison);
+    };
+
+    validator.isBefore = function (str, date) {
+        var comparison = validator.toDate(date || new Date())
+          , original = validator.toDate(str);
+        return original &amp;&amp; comparison &amp;&amp; original &lt; comparison;
+    };
+
+    validator.isIn = function (str, options) {
+        if (!options || typeof options.indexOf !== &#039;function&#039;) {
+            return false;
+        }
+        if (Object.prototype.toString.call(options) === &#039;[object Array]&#039;) {
+            var array = [];
+            for (var i = 0, len = options.length; i &lt; len; i++) {
+                array[i] = validator.toString(options[i]);
+            }
+            options = array;
+        }
+        return options.indexOf(str) &gt;= 0;
+    };
+
+    validator.isCreditCard = function (str) {
+        var sanitized = str.replace(/[^0-9]+/g, &#039;&#039;);
+        if (!creditCard.test(sanitized)) {
+            return false;
+        }
+        var sum = 0, digit, tmpNum, shouldDouble;
+        for (var i = sanitized.length - 1; i &gt;= 0; i--) {
+            digit = sanitized.substring(i, (i + 1));
+            tmpNum = parseInt(digit, 10);
+            if (shouldDouble) {
+                tmpNum *= 2;
+                if (tmpNum &gt;= 10) {
+                    sum += ((tmpNum % 10) + 1);
+                } else {
+                    sum += tmpNum;
+                }
+            } else {
+                sum += tmpNum;
+            }
+            shouldDouble = !shouldDouble;
+        }
+        return !!((sum % 10) === 0 ? sanitized : false);
+    };
+
+    validator.isISBN = function (str, version) {
+        version = validator.toString(version);
+        if (!version) {
+            return validator.isISBN(str, 10) || validator.isISBN(str, 13);
+        }
+        var sanitized = str.replace(/[\s-]+/g, &#039;&#039;)
+          , checksum = 0, i;
+        if (version === &#039;10&#039;) {
+            if (!isbn10Maybe.test(sanitized)) {
+                return false;
+            }
+            for (i = 0; i &lt; 9; i++) {
+                checksum += (i + 1) * sanitized.charAt(i);
+            }
+            if (sanitized.charAt(9) === &#039;X&#039;) {
+                checksum += 10 * 10;
+            } else {
+                checksum += 10 * sanitized.charAt(9);
+            }
+            if ((checksum % 11) === 0) {
+                return !!sanitized;
+            }
+        } else  if (version === &#039;13&#039;) {
+            if (!isbn13Maybe.test(sanitized)) {
+                return false;
+            }
+            var factor = [ 1, 3 ];
+            for (i = 0; i &lt; 12; i++) {
+                checksum += factor[i % 2] * sanitized.charAt(i);
+            }
+            if (sanitized.charAt(12) - ((10 - (checksum % 10)) % 10) === 0) {
+                return !!sanitized;
+            }
+        }
+        return false;
+    };
+
+    validator.isJSON = function (str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    };
+
+    validator.isMultibyte = function (str) {
+        return multibyte.test(str);
+    };
+
+    validator.isAscii = function (str) {
+        return ascii.test(str);
+    };
+
+    validator.isFullWidth = function (str) {
+        return fullWidth.test(str);
+    };
+
+    validator.isHalfWidth = function (str) {
+        return halfWidth.test(str);
+    };
+
+    validator.isVariableWidth = function (str) {
+        return fullWidth.test(str) &amp;&amp; halfWidth.test(str);
+    };
+
+    validator.isSurrogatePair = function (str) {
+        return surrogatePair.test(str);
+    };
+
+    validator.isBase64 = function (str) {
+        return base64.test(str);
+    };
+
+    validator.ltrim = function (str, chars) {
+        var pattern = chars ? new RegExp(&#039;^[&#039; + chars + &#039;]+&#039;, &#039;g&#039;) : /^\s+/g;
+        return str.replace(pattern, &#039;&#039;);
+    };
+
+    validator.rtrim = function (str, chars) {
+        var pattern = chars ? new RegExp(&#039;[&#039; + chars + &#039;]+$&#039;, &#039;g&#039;) : /\s+$/g;
+        return str.replace(pattern, &#039;&#039;);
+    };
+
+    validator.trim = function (str, chars) {
+        var pattern = chars ? new RegExp(&#039;^[&#039; + chars + &#039;]+|[&#039; + chars + &#039;]+$&#039;, &#039;g&#039;) : /^\s+|\s+$/g;
+        return str.replace(pattern, &#039;&#039;);
+    };
+
+    validator.escape = function (str) {
+        return (str.replace(/&amp;/g, &#039;&amp;amp;&#039;)
+            .replace(/&quot;/g, &#039;&amp;quot;&#039;)
+            .replace(/&lt;/g, &#039;&amp;lt;&#039;)
+            .replace(/&gt;/g, &#039;&amp;gt;&#039;));
+    };
+
+    validator.stripLow = function (str, keep_new_lines) {
+        var chars = keep_new_lines ? &#039;\x00-\x09\x0B\x0C\x0E-\x1F\x7F&#039; : &#039;\x00-\x1F\x7F&#039;;
+        return validator.blacklist(str, chars);
+    };
+
+    validator.whitelist = function (str, chars) {
+        return str.replace(new RegExp(&#039;[^&#039; + chars + &#039;]+&#039;, &#039;g&#039;), &#039;&#039;);
+    };
+
+    validator.blacklist = function (str, chars) {
+        return str.replace(new RegExp(&#039;[&#039; + chars + &#039;]+&#039;, &#039;g&#039;), &#039;&#039;);
+    };
+
+    function merge(obj, defaults) {
+        obj = obj || {};
+        for (var key in defaults) {
+            if (typeof obj[key] === &#039;undefined&#039;) {
+                obj[key] = defaults[key];
+            }
+        }
+        return obj;
+    }
+
+    validator.init();
+
+    return validator;
+
+});</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

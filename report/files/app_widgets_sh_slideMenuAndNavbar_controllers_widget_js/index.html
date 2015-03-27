@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/widgets/sh.slideMenuAndNavbar/controllers/widget.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/widgets/sh.slideMenuAndNavbar/controllers/widget.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">66.55</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">772</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">63.73</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">5.24</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * This handles both multiple menus and the main navigation.
+ * It supports both tablet via a split window approach.
+ * It also supports dynamic manipulation of menu / navbar icons and functionality.
+ *
+ * The beginninng was based off of: https://github.com/danielsefton/AlloySliderMenu
+ * with a lot of refactorings, enhancements, and better comments
+ *
+ * @version 0.5
+ * @author Steven House &lt;steven.m.house@gmail.com&gt;
+ *
+ * @link https://github.com/danielsefton/AlloySliderMenu
+ */
+
+// Access the Global Log Controller
+var log = Alloy.Globals.log;
+log.debug(&#039;[ROOT] Vroom!  Starting up!&#039;);
+
+var leftMenuWidth = 350;
+
+// Variable declarations
+var animateRight, animateLeft, animateReset, animateSideContent;
+
+var touchStartX = 0;
+var touchStartY = 0;
+var touchRightStarted = false;
+var touchLeftStarted = false;
+var buttonPressed = false;
+var hasSlided = false;
+var direction = &quot;reset&quot;;
+
+var viewRefMain;
+
+var sidebarActive = false;
+
+// Icons
+var iconStyle = &#039;dark&#039;;
+
+var currentCallbackL1 = [];
+var currentCallbackL2 = [];
+var currentCallbackR1 = [];
+var currentCallbackR2 = [];
+
+var breadcrumbs = [];
+
+init();
+
+Alloy.Globals.Menu = this;
+
+
+
+//Alloy.Globals.MainView = $.viewContainer;
+
+//var events = require(&#039;utils/eventReg&#039;);
+
+/**
+ * Start this running
+ */
+function init() {
+    log.debug(&#039;[FOUNDATION] : init&#039;);
+    addEventListeners();
+    setAnimations();
+}
+
+/**
+ * Do any cleanup you want
+ * @method cleanup
+ */
+function cleanup() {
+    $.buttonRight.image = &#039;&#039;;
+    $.buttonRight.removeEventListener(&#039;click&#039;, currentCallbackR1);
+
+    $.buttonRight2.image = &#039;&#039;;
+    $.buttonRight2.removeEventListener(&#039;click&#039;, currentCallbackL2);
+
+    $.buttonLeft.image = &#039;&#039;;
+    $.buttonLeft.removeEventListener(&#039;click&#039;, currentCallbackL1);
+
+    $.buttonLeft2.image = &#039;&#039;;
+    $.buttonLeft2.removeEventListener(&#039;click&#039;, currentCallbackL2);
+}
+
+/**
+ * Configure the Side Bar - Image / Text
+ * @param {Object} args
+ *
+ */
+function configureSideBar(args) {
+    log.debug(&#039;[FOUNDATION] : configureSideBar&#039;);
+    args = args ? args : {};
+
+    /*
+    var mainColor = args.mainColor ? args.mainColor : Alloy.CFG.themeColors
+        .lightObserve;
+    var accentColor = args.accentColor ? args.accentColor : Alloy.CFG.themeColors
+        .darkObserve;
+    var title = args.title ? args.title : &#039;&#039;;
+    */
+}
+
+/**
+ * Configure the main navigation bar: colors, title
+ * @method configureNavBar
+ * @param {Object} args
+ */
+function configureNavBar(args) {
+    /*
+    log.debug(&#039;[FOUNDATION] : configureNavBar()&#039;);
+
+    //$.imageViewTitle.visible = false;
+    var mainColor, accentColor, title;
+
+    var colors = {
+        mainColor: mainColor
+    };
+
+    $.labelTitle.text = args.title ? args.title : &quot;TEST TEST&quot;;
+    $.labelTitle.visible = true;
+
+    if (title) {
+        resetTabBar();
+    } else {
+        //$.viewBottomBar.visible = false;
+    }
+
+    //exports.setColor(colors.mainColor);
+    */
+}
+
+/**
+ * Set the color of the navigation bar
+ * @method setColor
+ */
+exports.setColor = function(color) {
+    var animation = Titanium.UI.createAnimation();
+    animation.backgroundColor = color;
+    animation.duration = 250;
+
+    $.viewNav.animate(animation);
+    $.buttonLeft.animate(animation);
+    $.buttonRight.animate(animation);
+    //$.imageViewTitle.animate(animation);
+    $.viewTitleHolder.animate(animation);
+
+    $.viewMainContent.animate(animation);
+
+}
+
+/**
+ * Reset Tab Bar
+ * @method resetTabBar
+ */
+function resetTabBar() {
+    // bottom bar reset function
+}
+
+var mainContentTitle = &quot;&quot;;
+/**
+ * Set the view that will appear as the main content
+ * @method setMainContent
+ */
+exports.setMainContent = function(viewTitle, args) {
+    args = args ? args : {};
+    log.info(&#039;[FOUNDATION] : Opening &#039; + viewTitle, args);
+    breadcrumbs.push({
+        controller: viewTitle,
+        args: args
+    });
+
+    exports.hideButton(&#039;r2&#039;);
+    exports.hideButton(&#039;l2&#039;);
+
+    args = args || {};
+
+    // Reset sidebar if it is currently active
+    if (sidebarActive) {
+        $.viewSideContent.width = 0;
+        $.viewMainContent.width = &quot;100%&quot;;
+        sidebarActive = false;
+    }
+
+    // Only render if a different page
+    if (mainContentTitle !== viewTitle) {
+        mainContentTitle = viewTitle;
+        // Remove children, save render
+        if ($.viewMainContent.children.length &gt; 0) {
+            // First cleanup the view
+            //if ($.viewMainContent.children[0].cleanup !== null) {
+                //$.viewMainContent.children[0].cleanup();
+            //}
+            $.viewMainContent.removeAllChildren();
+        }
+        var mainContentView = Alloy.createController(viewTitle, args);
+        $.viewMainContent.add(mainContentView.getView());
+        configureNavBar(viewTitle);
+
+        args.title ? exports.setTitle(args.title) : function() {};
+    }
+};
+
+var sideContentTitle = &quot;&quot;;
+/**
+ * Set the view that will appear as the sidebar content.  Used in tablets
+ * @method setSideContent
+ */
+exports.setSideContent = function(controller, args) {
+    args = args || {};
+    var title = args.title || &#039;&#039;;
+
+    log.info(&#039;[ROOT] :: Set Side to &#039; + controller, args);
+    //breadcrumbs.push({controller: controller, args: args});
+    sidebarActive = true;
+
+    $.viewSideContent.width = &quot;50%&quot;;
+    $.viewMainContent.width = &quot;50%&quot;;
+    //$.viewSideContent.animate(animateSideContent);
+
+    // Remove children, save render
+    if ($.viewSideContent.children.length &gt; 0) {
+        // First cleanup the view
+        //$.viewSideContent.children[0].cleanup();
+        $.viewSideContent.removeAllChildren();
+    }
+
+    var sideContentView = Alloy.createController(controller, args);
+    $.viewSideContent.add(sideContentView.getView());
+    configureSideBar(title);
+
+};
+
+/**
+ * Hide the sidebar content.  Used in tablets
+ * @method hideSideContent
+ */
+exports.hideSideContent = function() {
+    log.debug(&#039;[FOUNDATION] : hideSideContent&#039;);
+    $.viewSideContent.width = 0;
+};
+
+/**
+ * Set the Title of the Nav Bar
+ * @method setTitle
+ */
+exports.setTitle = function(title) {
+    log.debug(&#039;[FOUNDATION] : setTitle : title = &#039; + title);
+    if (!_.isUndefined(title)) {
+        $.labelTitle.text = title;
+    }
+};
+
+/**
+ * Set the navigation buttons.  Image and callback
+ * @method setButton
+ * @param {Object} args
+ * @param {String} args.image Location of image
+ * @param {Function} args.callback The callback to happen upon click
+ * @param {String} args.button The button to affect
+ */
+exports.setButton = function(args) {
+    // @see https://developer.appcelerator.com/question/127638/why-does-removeeventlistener-need-a-callback
+    log.debug(&#039;[ROOT] Setting Button &#039; + args.button, args);
+
+    var image = args.image ? args.image : &#039;&#039;;
+    //var success = args.success ? args.success : function(){};
+
+    var button = args.button ? args.button : false;
+
+    if (!button) {
+        return false;
+    }
+
+    switch (button) {
+        case &#039;r1&#039;:
+            // If there is an event listener, pop it off the stack to remove
+            if (currentCallbackR1.length &gt; 0) {
+                $.buttonRight.removeEventListener(&#039;click&#039;, currentCallbackR1.pop());
+            }
+            currentCallbackR1.push(args.success ? args.success : function() {
+                log.warn(&quot;No Success callback provided&quot;);
+            });
+            $.buttonRight.image = image;
+
+            $.buttonRight.addEventListener(&#039;click&#039;, _.first(
+                currentCallbackR1));
+
+            break;
+        case &#039;r2&#039;:
+            // If there is an event listener, pop it off the stack to remove
+            if (currentCallbackR2.length &gt; 0) {
+                $.buttonRight2.removeEventListener(&#039;click&#039;,
+                    currentCallbackR2.pop());
+            }
+
+            currentCallbackR2.push(args.success ? args.success : function() {
+                log.warn(&quot;No Success callback provided&quot;);
+            });
+            $.buttonRight2.image = image;
+
+            $.buttonRight2.addEventListener(&#039;click&#039;, _.first(
+                currentCallbackR2));
+            break;
+        case &#039;l1&#039;:
+            // If there is an event listener, pop it off the stack to remove
+            if (currentCallbackL1.length &gt; 0) {
+                $.buttonLeft.removeEventListener(&#039;click&#039;, currentCallbackL1.pop());
+            }
+            // Push new callback to stack
+            currentCallbackL1.push(args.success ? args.success : function() {
+                log.warn(&quot;No Success callback provided&quot;);
+            });
+            // Set Button Image
+            $.buttonLeft.image = image;
+            // Add the event listener
+            $.buttonLeft.addEventListener(&#039;click&#039;, _.first(currentCallbackL1));
+            break;
+        case &#039;l2&#039;:
+            // If there is an event listener, pop it off the stack to remove
+            if (currentCallbackL2.length &gt; 0) {
+                $.buttonLeft2.removeEventListener(&#039;click&#039;, currentCallbackL2.pop());
+            }
+
+            currentCallbackL2.push(args.success ? args.success : function() {
+                log.warn(&quot;No Success callback provided&quot;);
+            });
+            $.buttonLeft2.image = image;
+            $.buttonLeft2.addEventListener(&#039;click&#039;, _.first(
+                currentCallbackL2));
+            break;
+        default:
+            break;
+    }
+
+};
+
+/**
+ * Set the navigation buttons.  Image and callback
+ * @method hideButton
+ * @param {Object} args
+ */
+exports.hideButton = function(selectedButton) {
+    log.debug(&#039;[FOUNDATION] : hideButton : selectedButton = &#039; +
+        selectedButton);
+    if (!selectedButton) {
+        return false;
+    }
+
+    switch (selectedButton) {
+        case &#039;r1&#039;:
+            $.buttonRight.visible = false;
+            break;
+        case &#039;r2&#039;:
+            $.buttonRight2.visible = false;
+            break;
+        case &#039;l1&#039;:
+            $.buttonLeft.visible = false;
+            break;
+        case &#039;l2&#039;:
+            $.buttonLeft2.visible = false;
+            break;
+        default:
+            break;
+    }
+};
+
+/**
+ * Set the navigation buttons.  Image and callback
+ * @method setButton
+ * @param {Object} args
+ */
+exports.showButton = function(selectedButton) {
+    log.debug(&#039;[ROOT] Show Button &#039; + selectedButton);
+    if (!selectedButton) {
+        alert(&#039;Attempted to show navigation button but did not provide the button to show&#039;);
+        return false;
+    }
+
+    switch (selectedButton) {
+        case &#039;r1&#039;:
+            $.buttonRight.visible = true;
+            break;
+        case &#039;r2&#039;:
+            $.buttonRight2.visible = true;
+            break;
+        case &#039;l1&#039;:
+            $.buttonLeft.visible = true;
+            break;
+        case &#039;l2&#039;:
+            $.buttonLeft2.visible = true;
+            break;
+        default:
+            alert(&quot;Default.  Shouldn&#039;t see this&quot;);
+            break;
+    }
+};
+
+/**
+ * Hide the Nav Bar
+ * @method hideNavBar
+ */
+exports.hideNavBar = function() {
+    $.viewNav.height = 0;
+    $.viewContentArea.top = 0;
+    $.viewShadow.visible = 0;
+};
+
+/**
+ * Show the Nav Bar
+ * @method showNavBar
+ */
+exports.showNavBar = function() {
+    if (Alloy.isTablet) {
+        $.viewNav.height = 90;
+        $.viewContentArea.top = 90;
+    } else {
+        $.viewNav.height = 65;
+        $.viewContentArea.top = 65;
+    }
+
+    $.viewShadow.visible = 1;
+};
+
+/**
+ * Hide the Bottom Bar
+ * @method hideNavBar
+ */
+exports.hideBottomBar = function() {
+    //$.viewShadow.visible = 0;
+    $.viewBottomBar.height = 0;
+};
+
+/**
+ * Show the Bottom Bar
+ * @method hideNavBar
+ */
+exports.showBottomBar = function() {
+    //$.viewShadow.visible = 0;
+    $.viewBottomBar.height = 65;
+};
+
+exports.setBottomBar = function() {
+    $.viewBottomBar.removeAllChildren();
+};
+
+/**
+ * Hide the Info Bar
+ * @method hideInfoBar
+ */
+exports.hideInfoBar = function() {
+    var animation = Ti.UI.createAnimation({
+        height: 1,
+        opacity: 0.0,
+        duration: 500,
+        curve: Titanium.UI.ANIMATION_CURVE_EASE_IN
+    });
+    $.viewInfoBar.animate(animation);
+};
+
+/**
+ * Show the Info Bar
+ * @method showInfoBar
+ */
+exports.showInfoBar = function(args) {
+    // If no buttons hide imageViews
+    if (!args.yes &amp;&amp; !args.cancel) {
+        $.imageViewInfoBarIcon.width = 0;
+        $.imageViewInfoBarIcon2.width = 0;
+        $.labelInfoBarTitle.left = 0;
+        $.labelInfoBarTitle.right = 0;
+    } else {
+        $.imageViewInfoBarIcon.width = 35;
+        $.imageViewInfoBarIcon2.width = 35;
+        $.labelInfoBarTitle.left = 65;
+        $.labelInfoBarTitle.right = 65;
+    }
+
+    //@TODO formFactor
+    args = args || {};
+    var duration = args.duration ? args.duration : 3500;
+    $.labelInfoBarTitle.text = args.title ? args.title : &#039;Use args.title&#039;;
+    $.viewInfoBar.backgroundColor = args.color ? args.color : &quot;#333&quot;;
+    $.imageViewInfoBarIcon.image = args.icon ? args.icon : &quot;/images/navigation/ic_cancel_white_48dp.png&quot;;
+    $.imageViewInfoBarIcon2.image = args.icon ? args.icon : &quot;/images/navigation/ic_check_white_48dp.png&quot;;
+
+    var cancel;
+    if (args.cancel !== null &amp;&amp; args.cancel !== undefined) {
+        var cancel = function() {
+            args.cancel();
+            exports.hideInfoBar();
+        };
+
+        var yes = function() {
+            exports.hideInfoBar();
+            alert(&#039;here&#039;);
+        };
+
+        $.imageViewInfoBarIcon.removeEventListener(cancel);
+        $.imageViewInfoBarIcon2.removeEventListener(yes);
+        $.imageViewInfoBarIcon.addEventListener(&#039;click&#039;, cancel);
+        $.imageViewInfoBarIcon2.addEventListener(&#039;click&#039;, yes);
+    }
+
+
+    _.delay(function(){
+        var animation = Ti.UI.createAnimation({
+            height: 45,
+            opacity: 0.85,
+            duration: 500,
+            curve: Titanium.UI.ANIMATION_CURVE_EASE_IN
+        });
+        $.viewInfoBar.animate(animation);
+    }, 500);
+
+    if (duration) {
+        _.delay(function(){
+            exports.hideInfoBar();
+        }, duration);
+    }
+
+};
+
+
+/**
+ * Get Breadcrumbs
+ * @method getBreadcrumbs
+ * @param {Number} numCrumbs Number of breadcrumbs to return.  Defaults to 5.
+ * @return {Object} breadcrumbs Returns specified number of breadcrumbss
+ */
+exports.getBreadcrumbs = function(numCrumbs) {
+    numCrumbs = numCrumbs ? numCrumbs : 5;
+    return _.last(breadcrumbs, numCrumbs);
+};
+
+/**
+ * Get the last Controller and open it
+ */
+exports.goBack = function() {
+    var lastController = _.first(exports.getBreadcrumbs(2));
+    if (!_.isUndefined(lastController.viewTitle) &amp;&amp; !_.isUndefined(lastController.args)) {
+        exports.setMainContent(lastController.viewTitle, lastController.args);
+    } else if (!_.isUndefined(lastController.viewTitle)) {
+        exports.setMainContent(lastController.viewTitle);
+    } else {
+        exports.setMainContent(&quot;HomePage&quot;);
+    }
+
+};
+
+/**
+ * Toggle the Left Slider
+ * @method toggleLeftSlider
+ */
+exports.toggleLeftSlider = function() {
+    if (!hasSlided) {
+        direction = &quot;right&quot;;
+        $.viewMovable.animate(animateRight);
+        hasSlided = true;
+        $.leftMenu.zIndex = 4;
+        $.topNavigationDrawer.zIndex = 0;
+    } else {
+        direction = &quot;reset&quot;;
+        $.viewMovable.animate(animateReset);
+        hasSlided = false;
+        $.leftMenu.zIndex = 1;
+        $.topNavigationDrawer.zIndex = 0;
+
+        $.buttonLeft.touchEnabled = true;
+        $.buttonRight.touchEnabled = true;
+    }
+
+    log.debug(&#039;[FOUNDATION] : Left Menu Has Slided: &#039; + hasSlided +
+        &#039; in direction: &#039; + direction);
+};
+
+/**
+ * Toggle the Right Slider
+ * @method toggleRightSlider
+ */
+exports.toggleRightSlider = function() {
+    if (!hasSlided) {
+        direction = &quot;left&quot;;
+        $.viewMovable.animate(animateLeft);
+        hasSlided = true;
+        $.rightMenu.zIndex = 4;
+        $.topNavigationDrawer.zIndex = 0;
+    } else {
+        direction = &quot;reset&quot;;
+        $.viewMovable.animate(animateReset);
+        hasSlided = false;
+        $.rightMenu.zIndex = 1;
+        $.topNavigationDrawer.zIndex = 0;
+
+        $.buttonLeft.touchEnabled = true;
+        $.buttonRight.touchEnabled = true;
+    }
+
+    log.debug(&#039;[FOUNDATION] : Left Menu Has Slided: &#039; + hasSlided +
+        &#039; in direction: &#039; + direction);
+};
+
+/**
+ * Toggle the Right Slider
+ * @method toggleTopSlider
+ */
+exports.toggleTopSlider = function() {};
+
+/**
+ * When device is rotated, handle View sizing accordingly
+ * @method handleRotation
+ */
+exports.handleRotation = function() {
+    log.debug(&#039;[FOUNDATION] : handleRotation()&#039;);
+
+    /*
+    $.viewContainer.width = Ti.Platform.displayCaps.platformWidth;
+    $.viewContainer.height = Ti.Platform.displayCaps.platformHeight;
+
+    $.viewMovable.width = Ti.Platform.displayCaps.platformWidth;
+    $.viewMovable.height = Ti.Platform.displayCaps.platformHeight;
+
+    $.viewNav.width = Ti.Platform.displayCaps.platformWidth;
+
+    $.viewContentArea.width = Ti.Platform.displayCaps.platformWidth;
+    $.viewMainContent.height = &quot;Ti.UI.FILL&quot;;
+
+
+    if (sidebarActive) {
+        $.viewSideContent.width = &quot;50%&quot;;
+        $.viewMainContent.width = &quot;50%&quot;;
+
+    } else {
+        //$.viewSideContent.width = 0;
+        $.viewMainContent.width = Ti.Platform.displayCaps.platformWidth;
+    }
+    */
+};
+
+/**
+ * Add a view to the menu
+ * @method addMenuView
+ * @param {Object} view The View to add to the menu
+ */
+exports.addMenuView = function(view) {
+    log.info(&#039;Menu Widget :: Adding a view to the menu&#039;);
+    $.leftMenu.add(view);
+};
+
+/**
+ * Add a view to the menu
+ * @method changeMenu
+ * @param {Object} args Args to be passed to the function
+ */
+exports.changeMenu = function(args) {
+    args = args ? args : {};
+    // Left or right menu?
+    var menuSide = args.side;
+    var image = args.image;
+    var onclick = args.onclick;
+
+    if (menuSide === &#039;right&#039;) {
+        if (image) {
+            $.buttonRight.image;
+        }
+        if (onclick) {
+            $.buttonRight.removeEventListener(&#039;touchend&#039;);
+            $.buttonRight.addEventListener(&#039;click&#039;, onclick);
+        }
+
+    } else {
+        if (image) {
+            $.buttonLeft.image;
+        }
+        if (onclick) {
+            $.buttonLeft.removeEventListener(&#039;touchend&#039;);
+            $.buttonLeft.addEventListener(&#039;click&#039;, onclick);
+        }
+    }
+
+
+};
+
+/**
+ * Add menu event listeners
+ * @method addEventListeners
+ */
+function addEventListeners() {
+    log.debug(&#039;[FOUNDATION] : Adding Menu Event Listeners&#039;);
+
+    // Handle Orientation Change
+    Ti.Gesture.addEventListener(&#039;orientationchange&#039;, function() {
+        exports.handleRotation();
+    });
+
+    // Open Logger via Menu
+    $.viewNav.addEventListener(&#039;longpress&#039;, function() {
+        displayLogs();
+    });
+
+    // Opens Logger via top Nav Longpress
+    $.viewNav.addEventListener(&#039;longpress&#039;, function() {
+        displayLogs();
+    });
+
+    // Left Menu Toggle
+    $.leftMenu.addEventListener(&#039;click&#039;, function(e) {
+        _.delay($.toggleLeftSlider, 250);
+    });
+
+    /*
+    $.viewHome.addEventListener(&#039;click&#039;, function() {
+        exports.setMainContent(&#039;HomePage&#039;);
+    });
+
+
+    // Open Settings
+    $.viewSettings.addEventListener(&#039;click&#039;, function() {
+        exports.setMainContent(&#039;Settings&#039;);
+    });
+
+    // Open Private Messages
+    $.viewInbox.addEventListener(&#039;click&#039;, function() {
+        exports.setMainContent(&#039;UserMessages&#039;);
+    });
+
+    // Open Feedback
+    $.viewFeedback.addEventListener(&#039;click&#039;, function() {
+        //@TODO send screenshot to feedback
+        var feedbackWindow = Alloy.createWidget(&quot;com.sprint.qwo.common.feedback&quot;);
+        feedbackWindow.show({title: &quot;Feedback&quot;});
+    });
+    */
+    Ti.App.addEventListener(&quot;sliderToggled&quot;, function(e) {
+        alert(&#039;Does this code ever get hit???&#039;);
+        if (e.direction == &quot;right&quot;) {
+            $.leftMenu.zIndex = 2;
+            $.rightMenu.zIndex = 100;
+            $.topNavigationDrawer.zIndex = 0;
+        } else if (e.direction == &quot;left&quot;) {
+            $.leftMenu.zIndex = 1;
+            $.rightMenu.zIndex = 200;
+            $.topNavigationDrawer.zIndex = 0;
+        }
+    });
+}
+
+/**
+ * Declare the animations to be used
+ * @method setAnimations
+ */
+function setAnimations() {
+    // Variable declarations
+    animateRight = Ti.UI.createAnimation({
+        left: Alloy.isTablet ? 350 : 250,
+        curve: Ti.UI.ANIMATION_CURVE_EASE_OUT,
+        duration: 150
+    });
+
+    animateLeft = Ti.UI.createAnimation({
+        left: Alloy.isTablet ? -350 : -250,
+        curve: Ti.UI.ANIMATION_CURVE_EASE_OUT,
+        duration: 150
+    });
+
+    animateReset = Ti.UI.createAnimation({
+        left: 0,
+        curve: Ti.UI.ANIMATION_CURVE_EASE_OUT,
+        duration: 150
+    });
+
+    animateSideContent = Ti.UI.createAnimation({
+        width: &quot;50%&quot;,
+        curve: Ti.UI.ANIMATION_CURVE_EASE_OUT,
+        duration: 500
+    });
+}
+
+/**
+ * Logging Utilities
+ * @method displayLogs
+ */
+function displayLogs() {
+    log.debug(&#039;[ROOT] :: Opening Logs&#039;);
+
+    var widgetLogger = Alloy.createWidget(&quot;com.sivci.logger&quot;);
+    widgetLogger.show({
+        title: &quot;Logs&quot;
+    });
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

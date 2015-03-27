@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/controllers/TodoListGallery.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/controllers/TodoListGallery.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">63.11</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">217</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">24.08</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">1.57</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * This is the controller file for &quot;TodoListGallery&quot;
+ *
+ * @class Controller.TodoListGallery
+ * @author Steven House
+ * @email steven.m.house@gmail.com
+ */
+
+// Include logging utility
+var log = Alloy.Globals.log;
+log.info(&quot;Opened TodoListDetails&quot;);
+
+var args = arguments[0] || {};
+var todo_id = args.todo_id || &quot;&quot;;
+
+var todo = Alloy.Collections.instance(&quot;ToDo&quot;);
+var todoItem = _.first(todo.where({ todo_id: todo_id }));
+
+var galleryExists = false;
+
+init();
+
+/**
+ * Start this baby runnin...
+ * @method init
+ */
+function init() {
+    log.info(&quot;[Gallery] Initializing &quot;);
+
+    setupNav();
+
+    if (!todoItem.get(&#039;photoCount&#039;) !== 0) {
+        createGallery();
+        galleryExists = true;
+    } else {
+        $.tdg.height = 0;
+        $.tdb.visible = false;
+        $.labelBlank.removeClass(&quot;h-0&quot;);
+        $.labelBlank.addClass(&quot;h-100&quot;);
+    }
+}
+
+/**
+ * Setup the Nav Bar
+ * @method setupNav
+ */
+function setupNav() {
+    Alloy.Globals.Menu.setTitle(&quot;Task Gallery&quot;);
+    Alloy.Globals.Menu.setColor(&quot;#aaa&quot;);
+
+    // Add menu
+    Alloy.Globals.Menu.setButton({
+        button: &#039;l1&#039;,
+        image : &quot;/images/navigation/ic_chevron_left_white_48dp.png&quot;,
+        success: function() {
+            log.debug(&#039;[Gallery] : Redirecting to Detail Page&#039;);
+            Alloy.Globals.Menu.setMainContent(&#039;TodoListDetail&#039;, {todo_id: todoItem.get(&#039;todo_id&#039;)});
+            //Alloy.Globals.Menu.goBack();
+        }
+    });
+
+    Alloy.Globals.Menu.setButton({
+        button: &#039;r2&#039;,
+        image: &quot;/images/action/ic_search_white_48dp.png&quot;,
+        success: function() {
+            if ($.search.height == 0) {
+                $.search.height = 44;
+            } else {
+                $.search.height = 0;
+            }
+
+        }
+    });
+
+    Alloy.Globals.Menu.setButton({
+        button: &#039;r1&#039;,
+        image: &quot;/images/action/ic_add_white_48dp.png&quot;,
+        success: function() {
+            require(&#039;Camera&#039;).promptGalleryOrCamera();
+        }
+    });
+
+    Alloy.Globals.Menu.showButton(&#039;r1&#039;);
+    Alloy.Globals.Menu.hideButton(&#039;r2&#039;);
+    Alloy.Globals.Menu.showButton(&#039;l1&#039;);
+}
+
+/**
+ * This returns an imageView created from the file system
+ * @method getPictureView
+ * @param {photoCount} count of photos
+ * @param {width} width
+ * @param {height} height
+ * @return {Object} imageView
+ */
+function getPictureView(photoCount, width, height) {
+    log.debug(&#039;[Gallery] : getPictureView : photoCount = &#039;, photoCount + &quot;, width = &quot; + width + &quot;, height = &quot; + height);
+    // Create the directory if it doesn&#039;t exist.  Use the Application Directory and specify /todo for directory
+    var imageDir = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, &#039;todo&#039;);
+    var file = Ti.Filesystem.getFile(imageDir.resolve(), todo_id + photoCount + &#039;.png&#039;);
+
+    // Check Filesystem for picture
+    if (!file.exists()) {
+        log.warn(&#039;[TodoListGallery] : No saved pictures found.  Should not see this&#039;);
+        return false;
+    } else {
+        var image = file.read();
+        log.info(&#039;[TodoListGallery] : Retrieved saved picture : &#039;,
+            image);
+
+        var imageView = Ti.UI.createImageView({
+            image: image,
+            width: width,
+            height: height,
+            borderColor: &quot;white&quot;
+        });
+
+        return {view: imageView, file: file};
+    }
+
+}
+
+/**
+ * Create Gallery of photos / videos
+ * @method createGallery
+ */
+function createGallery() {
+    log.debug(&#039;[Gallery] : createGallery() : number of images = &#039;, todoItem.get(&#039;photoCount&#039;));
+    galleryExists = true;
+
+    var photoCount = todoItem.get(&#039;photoCount&#039;);
+    var columns = 0;
+
+    // Bail if no photos, otherwise set the number of columns based on current photo count
+    if (photoCount &lt; 1) {
+        Alloy.Globals.Menu.showInfoBar({title: &quot;No Photos To Display&quot;});
+        log.debug(&quot;[Gallery] : createGallery : photoCount === 0&quot;);
+        return false;
+    } else if (photoCount == 1) {
+        columns = 1;
+    } else if (photoCount == 2) {
+        columns = 2;
+    } else {
+        columns = 3;
+    }
+
+    if (columns == 0) {
+        return;
+    }
+
+    $.tdg.init({
+        columns: columns,
+        space: 10,
+        delayTime: 500,
+        //gridBackgroundColor: &#039;#e1e1e1&#039;,
+        //itemBackgroundColor: &#039;#9fcd4c&#039;,
+        itemBorderColor: &#039;#eb5d36&#039;,
+        itemBorderWidth: 3,
+        itemBorderRadius: 5,
+        onItemClick: openLargeImage
+    });
+
+    displayAllPhotos(photoCount);
+}
+
+function openLargeImage(image) {
+    Alloy.Globals.Menu.setMainContent(&#039;TodoListGalleryItem&#039;, {image: image, todo_id: todoItem.get(&#039;todo_id&#039;)});
+}
+
+/**
+ * Display all photos
+ * @param photoCount
+ */
+function displayAllPhotos(photoCount) {
+    var images = [];
+    // For each photo count create a photo
+    _(photoCount).times(function(n) {
+        var imageViewAndFile = getPictureView(n + 1, 150, 150);
+        //THIS IS THE DATA THAT WE WANT AVAILABLE FOR THIS ITEM WHEN onItemClick OCCURS
+        var itemData = {
+            caption: &#039;Test&#039;,
+            file: imageViewAndFile.file
+        };
+        //NOW WE PUSH TO THE ARRAY THE VIEW AND THE DATA
+        images.push({
+            view: imageViewAndFile.view,
+            data: itemData
+        });
+
+    });
+
+    //ADD ALL THE ITEMS TO THE GRID
+    $.tdg.addGridItems(images);
+}
+
+/**
+ * Update the gallery and add a menu item
+ * @method updateGallery
+ */
+function updateGallery() {
+    log.debug(&quot;[Gallery] : Updating Gallery&quot;);
+    // If gallery doesn&#039;t exist create it
+    if (!galleryExists) {
+        if (!todoItem.get(&#039;photoCount&#039;) !== 0) {
+            createGallery();
+            galleryExists = true;
+        } else {
+            $.tdg.height = 0;
+            $.tdb.visible = false;
+            $.labelBlank.removeClass(&quot;h-0&quot;);
+            $.labelBlank.addClass(&quot;h-100&quot;);
+        }
+        return
+    }
+
+    // If gallery does exist add the first item
+    var imageView = getPictureView(1, 150, 150);
+
+    $.tdg.addGridItems({
+        view: imageView,
+        data: {
+            caption: &#039;Test&#039;
+        }
+    });
+
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

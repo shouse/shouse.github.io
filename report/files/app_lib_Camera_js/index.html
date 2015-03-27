@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - app/lib/Camera.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>app/lib/Camera.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">70.25</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">237</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">27.02</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">2.17</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * This handles the camera and related functions.  It handles video as well
+ * @class Util.Camera
+ * @author Steven House &lt;steven.m.house@gmail.com&gt;
+ *
+ * This goal of this library is to provide a pretty comprehensive and reusable utility library
+ * for dealing with the camera for photos and videos and persisting them to the filesystem
+ *
+ * @TODO Make it work :D  It&#039;s close to fully functional but it still needs to have a few bugs run out
+ * @TODO  Submit a pull request!
+ */
+
+// Access Global Logging Utility
+var log = Alloy.Globals.log;
+log.info(&#039;[VideoRecorder] : Opened Page&#039;);
+
+init();
+/**
+ * Initialize the Bluetooth library.  Ensure it&#039;s only Android that&#039;s calling
+ * @method init
+ */
+function init() {
+    log.debug(&#039;[VideoRecorder] : init&#039;);
+}
+
+/**
+ * We&#039;ll use the following variable to keep track of the result of our recording action.
+ */
+var videoUri = null;
+
+/**
+ * Ask user if they want supply media from gallery or camera
+ * @method promptGalleryOrCamera
+ */
+exports.promptGalleryOrCamera = function(args) {
+
+    var defaultOptions = {
+        options: [&#039;Take a Photo&#039;, &#039;Gallery&#039;],
+        selectedIndex: 0,
+        destructive: 0,
+        title: &#039;Take a Photo?&#039;
+    };
+
+    var dialogOptions = args.dialogOptions ? args.dialogOptions : defaultOptions;
+
+    var photoArgs = args.photoArgs ? args.photoArgs : {};
+    var imageName = args.imageName ? args.imageName : &#039;photo-&#039;;
+    var directory = args.directory ? args.directory : &#039;&#039;
+    var success = args.success ? args.success : function() {
+        save(image, imageName, directory);
+    };
+
+
+    // open alert dialog
+    var dialog = Ti.UI.createOptionDialog(dialogOptions);
+    dialog.show();
+    dialog.addEventListener(&#039;click&#039;, function(e) {
+        if (e.index == 0) {
+            log.debug(&#039;[TodoDetail] : captureImage&#039;);
+            exports.captureImage(save);
+        } else {
+            log.debug(&#039;[TodoDetail] : captureImage&#039;);
+            exports.fromGallery(save);
+        }
+    });
+};
+
+/**
+ * Get images from Gallery
+ * @method fromGallery
+ */
+exports.fromGallery = function(args) {
+    alert(&quot;args: &quot; + JSON.stringify(args, null, 4));
+    var success = args.success ? args.success : function(){};
+    var error = args.error ? args.cancel : function(){};
+    var cancel = args.cancel ? args.cancel : function(){};
+    Ti.Media.openPhotoGallery({
+        success:function(event) {
+            log.debug(&#039;Media Type from Gallerys: &#039;+ event.mediaType);
+            if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
+                success(event);
+            }
+        },
+        error:function(err) {
+            error(err);
+        },
+        cancel: cancel,
+        mediaTypes:[Ti.Media.MEDIA_TYPE_PHOTO]
+    });
+};
+
+/**
+ * This records video in Android by opening up an intent
+ */
+exports.recordVideoAndroid = function() {
+    // http://developer.android.com/reference/android/provider/MediaStore.html
+    var intent = Titanium.Android.createIntent({ action: &#039;android.media.action.VIDEO_CAPTURE&#039; });
+    Titanium.Android.currentActivity.startActivityForResult(intent, function(e) {
+        if (e.error) {
+            Ti.UI.createNotification({
+                duration: Ti.UI.NOTIFICATION_DURATION_LONG,
+                message: &#039;Error: &#039; + e.error
+            }).show();
+        } else {
+            if (e.resultCode === Titanium.Android.RESULT_OK) {
+                videoUri = e.intent.data;
+                Ti.UI.createNotification({
+                    duration: Ti.UI.NOTIFICATION_DURATION_LONG,
+                    message: &#039;Video captured; now share or save it!&#039;
+                }).show();
+                // note that this isn&#039;t a physical file! it&#039;s a URI in to the MediaStore.
+                shareButton.visible = true;
+                saveButton.visible = true;
+            } else {
+                Ti.UI.createNotification({
+                    duration: Ti.UI.NOTIFICATION_DURATION_LONG,
+                    message: &#039;Canceled/Error? Result code: &#039; + e.resultCode
+                }).show();
+            }
+        }
+    });
+};
+
+
+/**
+ * When they click this, we&#039;ll save the video to the SDCard and tell the user where to find it.
+ */
+exports.saveVideoAndroid = function() {
+    var source = Ti.Filesystem.getFile(videoUri);
+    var target = Ti.Filesystem.getFile(&#039;appdata://sample.3gp&#039;);
+    // note: source.exists() will return false, because this is a URI into the MediaStore.
+    // BUT we can still call &quot;copy&quot; to save the data to an actual file
+    source.copy(target.nativePath);
+
+    Ti.UI.createNotification({
+        duration: Ti.UI.NOTIFICATION_DURATION_LONG,
+        message: &#039;Saved to: &#039; + target.nativePath
+    }).show();
+};
+
+/**
+ * Capture video
+ * @param args
+ */
+exports.captureVideo = function(args) {
+    Ti.Media.showCamera({
+        mediaTypes: [Titanium.Media.MEDIA_TYPE_VIDEO],
+        success: function(e) {
+            var tempFile = Ti.Filesystem.getFile(Ti.Filesystem.tempDirectory, new Date().getTime() +&#039;-&#039;+ _.random(0,1000) +&#039;.mov&#039;);
+            tempFile.write(e.media);
+
+            exports.compressVideo(tempFile.resolve());
+        }
+    });
+};
+
+/**
+ *
+ * @param pathToVideoFile
+ */
+exports.compressVideo = function (pathToVideoFile) {
+    var trimmer = require(&#039;ti.ios.trim&#039;);
+    trimmer.trimVideo({
+        input: pathToVideoFile,
+        quality: 1, // use 1 for high compression or 2 for medium compression
+        success: function(e) {
+            Ti.API.info(&#039;SUCCESS:&#039;);
+            Ti.API.info(&#039;path to the compressed file: &#039;+ e.videoURL);
+        },
+        error: function(e) {
+            Ti.API.error(&#039;ERROR:&#039;);
+            Ti.API.info(JSON.stringify(e));
+        }
+    });
+};
+
+/**
+ * This invokes the camera
+ * @param {args}
+ * @method captureImage
+ * @return
+ */
+exports.captureImage = function(args){
+    log.debug(&#039;[VideoRecorder] : captureImage&#039;, args);
+
+    var success = args.success ? args.success : function() {
+        save(args)
+    };
+    var error = args.cancel ? args.cancel : function(err){
+        if (err.code == Titanium.Media.NO_CAMERA) {
+            alert(&#039;It appears you do not have support for the camera.&#039;);
+            log.warn(&#039;[VideoRecorder] Image capture is not supported on your device.&#039;);
+        } else {
+            alert(&#039;Unexpected error: &#039; + err.code);
+            log.warn(&#039;[VideoRecorder] Unexpected Camera error: &#039;, err.code);
+        }
+    };
+    var cancel = args.cancel ? args.cancel : function(){
+        log.debug(&#039;[VideoRecorder] : captureImage : User Cancelled&#039;);
+    };
+
+    if (Titanium.Media.isCameraSupported === false) {
+        log.warn(&#039;[VideoRecorder] : captureImage : Camera not supported&#039;);
+        alert(&#039;It appears you do not have support for the camera.&#039;);
+        return;
+    }
+
+    Titanium.Media.showCamera({
+        success: success,
+        error: error,
+        cancel: cancel,
+        allowEditing: true,
+        saveToPhotoGallery: true,
+        mediaTypes: [Ti.Media.MEDIA_TYPE_PHOTO, Ti.Media.MEDIA_TYPE_VIDEO],
+        videoMaximumDuration: 10000,
+        videoQuality: Ti.Media.QUALITY_HIGH
+    });
+}
+
+/**
+ * Save a photo to the SD card
+ * @param {Blob} image
+ * @param {String} imageName
+ * @param {String} directory
+ * @method savePhoto
+ */
+function save(image, imageName, directory) {
+    imageName = imageName ? imageName : &#039;photo-&#039;
+    directory = directory ? directory : &#039;photos-&#039;
+    if (image.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
+        log.debug(&#039;[VideoRecorder] : captureImage : Camera Success, image = &#039;, image);
+
+        // This part should be skipped to the existing function
+        var imageDir = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, directory);
+        if (!imageDir.exists()) {
+            imageDir.createDirectory();
+        }
+
+        var file = Ti.Filesystem.getFile(imageDir.resolve(), imageName + photoCount + &#039;.png&#039;);
+
+        log.debug(&quot;[VideoRecorder] : Saving image to = &quot;, imageDir.resolve() + new Date.now() + &#039;.png&#039;);
+
+        // Write to storage
+        file.write(image.media);
+
+        log.debug(&#039;[VideoRecorder] : Saved image to this location : &#039;, file.nativePath);
+    } else {
+        alert(&#039;We are only supporting images at the moment.&#039;);
+    }
+}</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ complexity.cyclomatic }} <br>
+    Length : {{ complexity.halstead.length }} <br>
+    Difficulty : {{ complexity.halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ complexity.halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>
